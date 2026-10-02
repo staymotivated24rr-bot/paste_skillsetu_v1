@@ -225,7 +225,7 @@ export function SkillSetu() {
             <div className="sidebar-bottom">
               <div className="local-note">
                 <span className="live-dot" />
-                Local-first prototype<p>Original content. No API key needed.</p>
+                Prototype mode<p>Original content. No API key needed.</p>
               </div>
               <div className="profile">
                 <div className="avatar">{state?.user.name.slice(0, 1).toUpperCase() ?? 'D'}</div>
@@ -310,7 +310,7 @@ export function SkillSetu() {
                   </div>
                   <span className="badge badge-green">
                     <span className="live-dot" />
-                    Progress saved locally
+                    Progress saved for this demo session
                   </span>
                 </div>
                 <Steps
