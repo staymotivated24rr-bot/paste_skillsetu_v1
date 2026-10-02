@@ -2,6 +2,8 @@
 
 ## Current: authentic Python readiness upgrade
 
+2026-10-03 follow-up: print status badges now use a light active surface, with a computed-color browser assertion requiring at least 4.5:1 contrast. Final-commit checks are visible on PR #4.
+
 Implementation is on `feat/python-authentic-readiness`, based on the merged Neon/PostgreSQL main (`a257e9c`). Python has five versioned 68-task banks, safe browser execution, six task types, evidence strength, independent repair mastery, seven-day planning and historical evidence reports. Shared dark UI and fictional cohort analytics cover all three roles. Data Analyst/Java content and Python legacy histories are retained. Full details: [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Review: [PR #4](https://github.com/staymotivated24rr-bot/paste_skillsetu_v1/pull/4), open into main; no merge or production promotion.
 
 Prisma generation, all three additive migrations, idempotent seed, typecheck, lint, 70 unit/integration tests in eight files, normal production build and `VERCEL=1` build pass. Production dependency audit reports zero vulnerabilities. All ten production Chromium journeys pass in one complete run (9.3 minutes), including all 130 coding contracts, actual five-second UI timeout/recovery, normal-console checks, API security guards, all three roles, histories, learning modes, reports/PDF and responsive layouts. All eight requested cloud environment checks are ready.

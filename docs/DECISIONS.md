@@ -45,3 +45,5 @@
 - Assessment independence means an unaided submitted response, including workplace decisions; guided hints belong to repair modules. Current bank IDs/content version were advanced when this metadata changed, preserving archived content. Print headings wrap and interactive report controls are hidden on paper; PDF visual review verifies this directly.
 
 - Day seven budgets 120 minutes for the fresh authentic bank rather than a short review estimate. A real favicon is served to keep ordinary Chromium journeys free from missing-resource errors.
+
+- Print status badges use a light active surface; the browser checks actual computed foreground/background contrast at 4.5:1 or higher before creating the PDF.

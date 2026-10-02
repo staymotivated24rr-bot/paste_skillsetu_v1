@@ -249,6 +249,27 @@ test('Python mixed baseline → deeper honest repair → fresh transfer reassess
         headers.every((header) => header.scrollWidth <= header.clientWidth + 1),
       ),
   ).toBe(true);
+  const printBadgeContrasts = await page.locator('.badge-green').evaluateAll((badges) => {
+    const luminance = (color: string) => {
+      const components = color
+        .match(/\d+(?:\.\d+)?/g)!
+        .slice(0, 3)
+        .map(Number)
+        .map((v) => v / 255);
+      const linear = components.map((v) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+      );
+      return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+    };
+    return badges.map((badge) => {
+      const style = getComputedStyle(badge);
+      const foreground = luminance(style.color),
+        background = luminance(style.backgroundColor);
+      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    });
+  });
+  expect(printBadgeContrasts.length).toBeGreaterThan(0);
+  expect(printBadgeContrasts.every((contrast) => contrast >= 4.5)).toBe(true);
   await page.pdf({
     path: 'test-results/authentic-readiness-report.pdf',
     format: 'A4',

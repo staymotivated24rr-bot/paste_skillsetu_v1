@@ -32,7 +32,7 @@
 
 15. **Transfer-evidence implementation.** The fourth assessment context applies the skill in a different workflow, and every repair module ends with a transfer challenge. Evidence records retain the transfer flag; reports show its contribution to evidence strength. Fresh-bank reassessment measures assessed proficiency separately from practice.
 
-16. **Dark premium UI redesign.** Semantic tokens use near-black and charcoal surfaces, off-white text, muted gray and restrained emerald. The compact sidebar, focused workplace task, developer code surface, skill map, obvious repair priority and calm cohort cards share the same system. Print switches to white paper and dark text.
+16. **Dark premium UI redesign.** Semantic tokens use near-black and charcoal surfaces, off-white text, muted gray and restrained emerald. The compact sidebar, focused workplace task, developer code surface, skill map, obvious repair priority and calm cohort cards share the same system. Print switches to white paper and dark text, including light status-badge surfaces with a browser contrast check.
 
 17. **Accessibility/responsive changes.** Visible focus, labeled fields, fieldsets, keyboard radio choices, accessible order controls, reduced motion and mobile drawer focus trapping/restoration are implemented. Coding on small screens includes larger-screen guidance while preserving drafts. Reports are tested at 1440, 1024, 768 and 390 pixels; mobile workspace and task views also have overflow assertions. Core text and accent tokens exceed 6:1 contrast against the lightest standard surface (muted text 6.06:1; primary text 13.89:1). This is targeted browser coverage, not a complete WCAG audit.
 
