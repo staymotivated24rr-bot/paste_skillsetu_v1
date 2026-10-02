@@ -5,7 +5,7 @@ import { provider } from './provider';
 import type { DemoState, Item, LessonContent, Option, Score, Skill, CohortView } from './types';
 import { AppError } from './errors';
 export { AppError } from './errors';
-import { publicBank, publicRepair } from './authentic/service';
+import { ensurePublishedPythonBanks, publicBank, publicRepair } from './authentic/service';
 import { pythonRepairs, pythonBanks } from './authentic/python-banks';
 import { scoreEvidence, strength } from './authentic/grading';
 import type { AssessmentBank, EvidenceSummary, RepairModule } from './authentic/types';
@@ -224,6 +224,7 @@ export async function startAssessment(
   expectedRoleId?: string,
 ) {
   const role = await activeRole(userId);
+  if (role.id === 'python-developer') await ensurePublishedPythonBanks();
   if (expectedRoleId && role.id !== expectedRoleId)
     throw new AppError('Your target role changed. Refresh before starting an assessment.', 409);
   const assessmentId = role.assessmentIds[kind];
