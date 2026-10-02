@@ -1,16 +1,18 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { ArrowRight, Users } from 'lucide-react';
+import { roleCatalog } from '@/lib/role-catalog';
 import type { CohortView } from '@/lib/types';
 import { meetsRequirements, readiness } from '@/lib/engine';
 import { Meter, Stat } from './ui';
 export function Cohort() {
+  const [roleId, setRoleId] = useState('data-analyst');
   const [data, setData] = useState<CohortView | null>(null);
   const [error, setError] = useState('');
   const [reload, setReload] = useState(0);
   useEffect(() => {
     let live = true;
-    fetch('/api/demo?view=cohort')
+    fetch(`/api/demo?view=cohort&roleId=${encodeURIComponent(roleId)}`)
       .then(async (r) => {
         if (!r.ok)
           throw new Error('Could not load the cohort. Check that the seed process has run.');
@@ -26,7 +28,7 @@ export function Cohort() {
     return () => {
       live = false;
     };
-  }, [reload]);
+  }, [reload, roleId]);
   if (error)
     return (
       <div className="card empty">
@@ -73,8 +75,28 @@ export function Cohort() {
   return (
     <>
       <div className="page-heading">
+        <label className="role-switch">
+          <span>Cohort role</span>
+          <select
+            aria-label="Cohort role"
+            value={roleId}
+            onChange={(e) => {
+              if (e.target.value !== roleId) {
+                setRoleId(e.target.value);
+                setData(null);
+                setError('');
+              }
+            }}
+          >
+            {roleCatalog.map((role) => (
+              <option value={role.id} key={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <div>
-          <span className="eyebrow">PLACEMENT CELL · DATA ANALYST</span>
+          <span className="eyebrow">PLACEMENT CELL · {data.role.name.toUpperCase()}</span>
           <h1>See the gaps. Track the change.</h1>
           <p>
             {data.college}

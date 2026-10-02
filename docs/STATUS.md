@@ -1,39 +1,35 @@
 # Status — 2026-10-02
 
-**SkillSetu MVP implemented and verified.** All planned milestones complete. No blocked tasks or unresolved founder questions.
+**Complete three-role SkillSetu MVP implemented and verified** in `/workspace/paste_skillsetu_v1`, based on founder-selected `516c5f1` and preserving its Data Analyst implementation and deployment safeguards.
 
 ## Delivered
 
-- Local Next.js/React/TypeScript application, validated Node API, engine-free Prisma and SQLite, original seeded content and isolated demo sessions.
-- Data Analyst graph: 16 skills with targets, importance and prerequisites, including requirement clarification and stakeholder communication.
-- Three workplace diagnostic simulations with 24 scored actions: revenue investigation, checkout experiment and support queue. Choice-dependent stakeholder responses and saved case conversation history.
-- Three alternate reassessment cases with 24 distinct equivalent actions. Original diagnostic remains baseline; latest completed assessment supplies current evidence.
-- Actual-answer weighted skill scores, evidence counts, prerequisite-aware gap plan, strongest/weakest areas and completed-answer review.
-- Sixteen original micro-lessons and 64 practice items. Interactive/structured modes share objectives; hints, feedback, retries, saved run history and first-response mastery checks work.
-- Before/after changes, honest declines, prototype readiness report, example employer requirement comparison, learned-module list, next actions and printable A4 report.
-- Public explicitly fictional placement dashboard: 30 cohort students, 26 diagnostics, gap distribution, initial/current averages, completion, threshold matching and sample declines.
-- Responsive desktop/mobile layout, keyboard radio input, accessible labels/focus/empty/error states, and local-only runtime.
-- README, durable AGENTS instructions, preserved amended product spec, architecture/rubrics, decisions, execution plan, verification notes and pending-question ledger.
+- Exactly Data Analyst, Python Developer and Java Developer. Persisted role chooser, independent progress, unfinished-assessment resume, and role-scoped content, scoring, gap plans, lessons, reports and employer requirements.
+- Data Analyst: original 16-node graph, three diagnostic and three alternate cases, 16 lessons/64 checks. The original graph, banks, lesson content and pure engine files remain unchanged; identifiers and student history are retained.
+- Python Developer: 17 nodes, three diagnostic and three different reassessment workplace cases, 17 original lessons/68 practice checks, both modes, stakeholder replies, explanations, hints, mastery, profile and report.
+- Java Developer: 18 nodes, three diagnostic and three different reassessment workplace cases, 18 original lessons/72 practice checks, both modes, stakeholder replies, explanations, hints, mastery, profile and report.
+- Totals: 51 nodes/lessons, 204 practice checks, 18 cases/144 scored interactions, three fictional employer profiles and three separate fictional 30-student cohorts.
+- Shared existing engines calculate actual-answer proficiency, prerequisite-first plans and honest before/after changes. Mastery never increases an assessment score automatically. No cross-role evidence credit.
+- Immutable legacy-safe migration adds selected learner role and cohort role with Data Analyst defaults. Ownership, sequencing and cross-role/stale submission guards remain server-side. Hosted migration schema changes and checksums commit atomically.
+- Public fictional placement dashboard switches roles; responsive/keyboard navigation and printable role reports work.
+- Both founder specifications retained, architecture/decisions/pending questions/plan/README updated; final ten-part implementation report in FINAL_REPORT.md.
 
-## Verified checks
+## Verified
 
-- **18 Vitest tests passed**: content/mapping, actual weighted scoring, completeness/duplicate guards, proficiency, readiness, role/employer match, prerequisite ordering/cycles, before/after, mastery/retries, local provider fallback, persisted attempts/paths/reports/progress, ownership and hidden keys, true reassessment decline and fictional cohort.
-- **3 production-browser tests passed**: full student diagnostic → results → learning → hints/practice → mastery → reassessment → report; both lesson modes; positive and negative changes; A4 PDF; fictional cohort; 390px mobile layout; keyboard input; resume on refresh; invalid/cross-origin/cross-session requests.
-- Type checking, ESLint (no warnings/errors) and production build **passed**.
-- A fresh source-only copy installed from cached npm packages, ran setup twice, built and launched in production. New-browser entry, seeded case, persisted answer, refresh/resume and cohort load **passed** with no browser errors.
-- Desktop/mobile screenshots and printed report visually inspected. Final print-only spacing adjustment verified with the full student browser journey and fresh PDF export.
+- **40 Vitest tests pass**: original 18 plus all-role content/coverage, weights, prerequisites, complete/partial scoring, independent histories, both learning modes and mastery, employer targets, honest reassessment declines, cohorts, role guards, hidden keys and legacy/libSQL migrations.
+- **6 production Playwright tests pass**: full Data Analyst/Python/Java journeys; different banks; role switching and unfinished resume; learning/hints/mastery; genuine improvements and declines; exact report role names and node counts; employer matches; PDFs; all cohorts; 390px layout; keyboard controls; invalid/cross-session/cross-origin requests.
+- Typecheck, ESLint and production build pass. `git diff --check` passes. Original Data Analyst graph, bank, lesson and engine files have no diff.
+- Clean source-only copy installed 482 dependencies using `npm ci --ignore-scripts`, ran setup twice (no history reset), and built successfully. The final clean production build also passed fresh browser entry, saved-answer reload/resume and cohort reads for all three roles without browser errors.
+- Legacy schema test preserves existing learner/attempt records while adding all tracks and verifies repeat setup. libSQL transaction tests verify repeatability, checksum protection and rollback of failed schema work.
+- Developer report and mobile screenshots visually inspected. A remaining report label/count was corrected, covered by assertions, rebuilt and verified with all six browser tests again.
+- Browser verification used a fresh production server on port 3004 to avoid unrelated workspace servers. This is a cloud-local test address, not a laptop-accessible public preview.
 
-## Definition of Done
+## Delivery and operation
 
-All reasonably achievable MVP checks in the founder specification are satisfied: application/install/database/seed, role and applied diagnostic, stored real answers/scores/gaps, actual-gap learning, both modes/practice/progress, distinct reassessment, honest comparison, report/employer profile, fictional college/cohort, tests/typecheck/lint/build/browser smoke, exact setup/demo README, documented limitations, and durable status/question memory.
+`/workspace/artifacts/SkillSetu-MultiRole.zip` contains the full source and launch scripts, excluding credentials, databases, installed dependencies, builds and browser output. The generic SkillSetu.zip is refreshed to the same version. Install Node.js 24, extract and double-click start-skillsetu.cmd on Windows; README has terminal and macOS/Linux instructions. The terminal must remain open. Local source does not update Vercel or GitHub automatically.
 
-## Remaining prototype limits
+## Remaining limits
 
-Few actions per skill (1–6), recognition-based structured choices, fixed alternate/practice banks, short original lessons, demo cookie access and fictional cohort metrics. No validated employability/learning-efficacy claims, production officer authorization, free-form code execution, avatar/voice, hiring marketplace or paid services. See README and ARCHITECTURE for details. No unresolved implementation failures.
+Structured recognition, fixed banks, short lessons, limited evidence, binary prototype rubrics, cookie demo access and fictional cohorts/employers. No free-form execution, scientific readiness validation, voice/3D or active AI. Cloud Linux verification is complete; Windows launch scripts are included but were not executed on a Windows machine here. Hosted storage support is retained and migration behavior checked locally, but no real hosted credentials/deployment were available for live verification.
 
-## Next executable work
-
-Founder-led validation with 20–30 engineering students, a placement officer and an analyst reviewer. Use independently scored fresh tasks to check whether diagnosed gaps are credible and whether learning transfers beyond fixed-choice familiarity. Future development should follow evidence from that pilot rather than add more roles immediately.
-
-## Access correction — 2026-10-02
-Founder clicked the chat's localhost link without installing/running locally. The app was built in the cloud workspace, so that link did not reach it. Started the cloud production server (port 3000), verified homepage and cohort endpoint return HTTP 200, and requested a Codex browser tab. No externally reachable preview URL is available from the current toolset. Added Windows and macOS/Linux launch scripts and prepared a source-only ZIP excluding credentials, databases, dependencies and test artifacts. Local setup instructions now distinguish cloud and laptop localhost.
+No unblocked implementation tasks or unresolved founder questions remain. Next work is a real learner/practitioner validation pilot using fresh independently scored tasks; see FINAL_REPORT.md.

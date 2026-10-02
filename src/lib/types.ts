@@ -1,3 +1,14 @@
+export type RoleSummary = {
+  id: string;
+  name: string;
+  description: string;
+  work: string;
+  duration: string;
+  categories: string[];
+  assessmentIds: { diagnostic: string; reassessment: string };
+  employerId: string;
+  cohortId: string;
+};
 export type Skill = {
   id: string;
   name: string;
@@ -89,6 +100,8 @@ export type ProgressView = {
   }[];
 };
 export type DemoState = {
+  role: RoleSummary;
+  roles: RoleSummary[];
   user: { id: string; name: string };
   skills: Skill[];
   scenarios: {
@@ -105,6 +118,8 @@ export type DemoState = {
   };
 };
 export type CohortView = {
+  role: RoleSummary;
+  roles: RoleSummary[];
   college: string;
   cohort: string;
   members: {

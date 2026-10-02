@@ -89,7 +89,7 @@ export function Results({
           <h1>{report ? 'Your progress, backed by evidence.' : 'Now you know where to focus.'}</h1>
           <p>
             {report
-              ? `${state.user.name} · Data Analyst · ${new Date(latest.completedAt!).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}`
+              ? `${state.user.name} · ${state.role.name} · ${new Date(latest.completedAt!).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}`
               : 'A practical snapshot of what you demonstrated — and your shortest path to the next level.'}
           </p>
         </div>
@@ -103,7 +103,7 @@ export function Results({
       <Steps active={report ? 3 : reassessed ? 2 : 1} />
       <div className="report-hero">
         <div>
-          <span className="eyebrow">DATA ANALYST · PROTOTYPE INDICATOR</span>
+          <span className="eyebrow">{state.role.name.toUpperCase()} · PROTOTYPE INDICATOR</span>
           <h2>{label}</h2>
           <p>
             {gaps.length
@@ -114,8 +114,8 @@ export function Results({
             <span className="tag">
               {reassessed ? 'Reassessment evidence' : 'Diagnostic evidence'}
             </span>
-            <span className="tag">24 scored actions</span>
-            <span className="tag">16 measured skills</span>
+            <span className="tag">{latest.answers.length} scored actions</span>
+            <span className="tag">{state.skills.length} measured skills</span>
           </div>
         </div>
         <div

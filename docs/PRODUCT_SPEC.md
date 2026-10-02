@@ -1296,3 +1296,8 @@ The original quiz-led assessment format is superseded by this founder requiremen
 > **Real-world diagnostic mode:** The diagnostic should primarily evaluate applied ability through realistic job scenarios, not only isolated quiz questions. For the Data Analyst MVP, create at least 2–3 interactive workplace simulations where a virtual client or stakeholder presents a problem, the learner asks or responds to clarification questions, interprets information, makes analytical decisions, and receives follow-up responses. Map each action to measurable skill nodes such as SQL, statistics, analytical reasoning, requirement clarification, and communication. Keep the MVP simulation text-based and structured; do not build a 3D or voice avatar yet.
 
 The preflight phase is complete. Other proposed defaults adopted: English for engineering students, demo student/officer entry, locally runnable Next.js/TypeScript/Prisma/SQLite monolith, no paid runtime services or API key. Implementation proceeds autonomously under the non-blocking workflow above.
+
+
+# Active extension — 2026-10-02
+
+Founder resumed the complete Python Developer and Java Developer extension on the updated paste_skillsetu_v1 base, preserving Data Analyst. The full extension brief is retained in [MULTI_ROLE_SPEC.md](MULTI_ROLE_SPEC.md). Preflight defaults were explicitly approved: independent role progress and no automatic cross-role proficiency credit. Later authorization resumed this scope after the temporary Data Analyst-only delivery.

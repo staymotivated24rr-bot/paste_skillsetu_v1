@@ -2597,3 +2597,64 @@ tr:last-child td {
     display: table-header-group;
   }
 }
+
+.role-options {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+}
+.role-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 18px;
+  border: 1px solid #d8e3da;
+  border-radius: 12px;
+  background: #fff;
+  color: #203d37;
+  cursor: pointer;
+}
+.role-choice:hover {
+  border-color: #07816b;
+}
+.role-choice.role-selected {
+  border: 2px solid #07816b;
+  padding: 17px;
+  background: #f0f7f1;
+}
+.role-choice-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.role-choice-heading strong {
+  font-size: 18px;
+}
+.role-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #526b63;
+  font-size: 12px;
+}
+.role-switch select {
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 1px solid #cbdcd2;
+  border-radius: 8px;
+  color: #203d37;
+  background: white;
+  font: inherit;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .product-topbar .role-switch span {
+    display: none;
+  }
+  .product-topbar .role-switch select {
+    max-width: 155px;
+    font-size: 12px;
+  }
+}
