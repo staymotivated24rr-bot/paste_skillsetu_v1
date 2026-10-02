@@ -16,7 +16,7 @@ import { diagnostic, reassessment } from '../src/lib/simulations';
 import { lessons } from '../src/lib/lessons';
 let uid = '';
 beforeAll(async () => {
-  execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
+  execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {
     env: process.env,
     stdio: 'pipe',
   });
