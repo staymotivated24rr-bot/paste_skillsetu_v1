@@ -1,8 +1,48 @@
+import { createHash } from 'node:crypto';
 import { db } from '../db';
 import { AppError } from '../errors';
 import { gradeTask, publicTask } from './grading';
 import type { AssessmentBank, TaskPayload, RepairModule, PublicBank, PublicRepair } from './types';
-import { pythonRepairs } from './python-banks';
+import { pythonBanks, pythonRepairs } from './python-banks';
+export async function ensurePublishedPythonBanks() {
+  const existing = await db.assessmentBank.findMany({
+    where: { id: { in: pythonBanks.map((bank) => bank.id) } },
+    select: { id: true, content: true, digest: true },
+  });
+  const known = new Map(existing.map((row) => [row.id, row]));
+  for (const bank of pythonBanks) {
+    const content = JSON.stringify(bank);
+    const digest = createHash('sha256').update(content).digest('hex');
+    const current = known.get(bank.id);
+    if (current) {
+      if (current.digest !== digest || current.content !== content)
+        throw new AppError(
+          `Published assessment bank ${bank.id} does not match the immutable application copy.`,
+          500,
+        );
+      continue;
+    }
+    const row = await db.assessmentBank.upsert({
+      where: { id: bank.id },
+      create: {
+        id: bank.id,
+        roleId: bank.roleId,
+        kind: bank.kind,
+        version: bank.version,
+        contentVersion: bank.contentVersion,
+        content,
+        digest,
+      },
+      update: {},
+    });
+    if (row.digest !== digest || row.content !== content)
+      throw new AppError(
+        `Published assessment bank ${bank.id} changed while it was being initialized.`,
+        500,
+      );
+  }
+}
+
 export function publicBank(
   bank: AssessmentBank,
   evidence: { taskId: string; score: number }[] = [],
