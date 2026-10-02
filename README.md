@@ -8,7 +8,7 @@ A locally runnable job-readiness prototype for engineering students with Data An
 
 For an easier launch after installing Node.js 24, double-click `start-skillsetu.cmd` on Windows. On macOS/Linux open a terminal in the extracted project and run `bash start-skillsetu.sh`. These scripts install dependencies on first use, initialize/seed the database and start the app. Keep the terminal window open while using SkillSetu.
 
-Use **Node.js 24** (or Node 22.13+) and npm. No API key, paid service, Docker, or separate database server is needed. Internet is needed once to install packages; the app itself uses no external runtime service.
+Use **Node.js 24** (or Node 22.13+) and npm. SkillSetu now uses PostgreSQL for durable persistence. For the hosted demo, Neon provides the database; local development can point to the same Neon project or another PostgreSQL database.
 
 From the repository directory:
 
@@ -30,35 +30,28 @@ npm start
 
 If a port is occupied: `npm run dev -- --port 3001` or `npm start -- --port 3001`.
 
-The default database is `prisma/dev.db`. Relative `DATABASE_URL` paths are resolved from `prisma/`; an absolute `file:` URL is also supported. `.env` is loaded by the setup scripts and Next.js. Environment variables already exported in the shell take precedence. Never commit `.env`, database files, or real student information.
+Set `DATABASE_URL` to a PostgreSQL connection string before running setup. Never commit `.env` or a real database password.
 
-`npm run setup` is repeatable and preserves student sessions. It updates the original demo content and fictional cohort. “New demo session” creates a separate learner; it does not delete previous database history. Clearing browser cookies loses access to that learner's demo session. Back up `prisma/dev.db` before manually resetting local data.
+`npm run setup` generates the Prisma client, applies checked-in PostgreSQL migrations, and idempotently seeds the three SkillSetu tracks and fictional cohorts.
 
-## Deploy on Vercel
+## Deploy on Vercel with Neon
 
-The local `file:./dev.db` database is intentionally for laptop/demo use only. A Vercel deployment must use durable hosted storage because serverless filesystem state is not a safe place to keep student progress.
+SkillSetu uses PostgreSQL in hosted environments. The recommended deployment is Vercel + Neon.
 
-The application supports hosted libSQL/Turso without changing the Prisma data model.
-
-Use the default Vercel build command, `npm run build`, with Node.js 24 and development dependencies installed. The build generates the Prisma client from the current schema before compiling Next.js, including on fresh installs or cached deployments. It does not migrate or seed a database and does not need database credentials to compile. CI verifies this build before local database setup.
-
-1. Create a hosted libSQL/Turso database.
-2. Add these Vercel environment variables:
-   - `TURSO_DATABASE_URL`
-   - `TURSO_AUTH_TOKEN`
-3. From a trusted local checkout, place the same values in `.env` and run:
+1. Create a Neon PostgreSQL project and database.
+2. Copy its pooled PostgreSQL connection string.
+3. Add it to Vercel as the secret environment variable `DATABASE_URL` for Production (and Preview if desired).
+4. From a trusted environment using the same `DATABASE_URL`, run:
 
 ```sh
-npm ci --ignore-scripts
-npm run setup:hosted
+npm ci
+npm run setup
 ```
 
-4. Redeploy Vercel.
-5. Check `/api/health`. A correctly configured hosted deployment returns HTTP 200 with `"database": "hosted-libsql"`.
+5. Redeploy Vercel.
+6. Open `/api/health`. A healthy hosted deployment returns HTTP 200 with `"database": "hosted-postgresql"`.
 
-Do **not** run a production deployment with a `file:` database. When Vercel is detected with only local SQLite configured, the API deliberately returns HTTP 503 with a clear setup message rather than pretending progress is durable.
-
-Never commit database credentials. The hosted setup command applies the checked-in migrations and idempotent seed data before the deployment receives student traffic.
+The application deliberately returns HTTP 503 on Vercel when `DATABASE_URL` is missing or is not a PostgreSQL URL, rather than pretending student progress is durable.
 
 ## Demonstrate the product
 
@@ -89,13 +82,13 @@ For a short demonstration, start a diagnostic and show the first stakeholder exc
 - Role switching saves independent progress, including unfinished assessments. There is no automatic proficiency credit between tracks. A stale tab cannot submit another role’s assessment or practice.
 - Three separate fictional 30-student cohorts, with 26 diagnosed students each, demonstrate role-specific gaps, changes and learning completion.
 - Data Analyst skill/content IDs, authored banks, scoring engine, and existing student records are preserved. Migration defaults existing learners to Data Analyst without resetting history.
-- Local SQLite and optional hosted libSQL persistence, validated demo sessions, server-owned grading, deployment guards, response headers and accessible navigation.
+- Durable PostgreSQL/Neon persistence, validated demo sessions, server-owned grading, deployment guards, response headers and accessible navigation.
 
 ## Architecture
 
-Next.js App Router, React, TypeScript, Prisma 6, SQLite/libSQL through `@prisma/adapter-libsql`, Zod, Lucide icons, Vitest, and Playwright. Original deterministic local content implements a provider interface, with a fallback wrapper for future optional providers. There is no active AI integration or “AI-powered” claim.
+Next.js App Router, React, TypeScript, Prisma 6 with PostgreSQL/Neon, Zod, Lucide icons, Vitest, and Playwright. Original deterministic local content implements a provider interface, with a fallback wrapper for future optional providers. There is no active AI integration or “AI-powered” claim.
 
-The engine-free Prisma runtime and bundled WASM generator avoid native Prisma binary downloads. `prisma/generate.ts` uses pinned Prisma internals; upgrade all Prisma packages together and recheck that script. Checked-in SQL migrations use Node's SQLite API, apply atomically and verify checksums. Add a new migration for schema changes; do not edit applied migrations. The relational model can be moved to PostgreSQL with a provider/adapter change and corresponding PostgreSQL migrations.
+Prisma generates the PostgreSQL client during build. Checked-in Prisma migrations are applied with `prisma migrate deploy`; add a new migration for future schema changes and do not edit migrations after they have been applied to a persistent database.
 
 The role catalog in `src/lib/role-catalog.ts` drives shared screens. `src/lib/tracks/` holds developer content and registers all three tracks. Assessment grading remains on the server; text/code excerpts are interpreted through structured choices, not executed. The tracks cover junior language/backend foundations without Django/FastAPI/Spring prerequisites.
 
@@ -145,7 +138,7 @@ To use a different port, set `E2E_BASE_URL=http://127.0.0.1:3004` and `E2E_SERVE
 - Reassessment uses a different fixed bank from diagnostic; repeated reassessments reuse that alternate bank. Practice runs also reuse fixed items, so familiarity can affect scores. Future trials should add larger item banks, alternate forms, content versioning and independent evaluation.
 - Lessons are original short demo content, not a complete analytics or software-development curriculum. Four practice items are a prototype mastery check.
 - Cookie demo access is not production authentication. The placement dashboard is public fictional data; no real college authorization, multi-tenancy, billing, recruiter marketplace or external hiring integration is implemented.
-- SQLite, a single monolith and serialized content payloads suit local demonstrations. Real deployments need identity/access control, content integrity, privacy/consent/retention decisions and operational hardening.
+- A single Next.js/PostgreSQL monolith and serialized content payloads suit the current prototype. Real deployments need identity/access control, content integrity, privacy/consent/retention decisions and operational hardening.
 - Cohort metrics are explicitly fabricated fixtures to demonstrate the dashboard. Student results are always computed from actual submitted choices.
 
 No unresolved founder decision currently blocks this MVP.
