@@ -1,0 +1,29 @@
+name: Live Product Review
+
+on:
+  push:
+    branches:
+      - audit/live-product-review-2026-10-02
+
+jobs:
+  live-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run live SkillSetu review
+        run: npx playwright test e2e/live-product-review.spec.ts --config=playwright.live.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-product-review
+          path: |
+            test-results
+            playwright-live-report
+          retention-days: 7
