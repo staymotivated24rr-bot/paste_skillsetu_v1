@@ -39,6 +39,15 @@ it('self-heals missing published banks, persists version/snapshot, resumes and c
   await expect(
     submitAuthentic(uid, attemptId, bank.tasks[0].id, correctPayload(bank.tasks[0])),
   ).rejects.toThrow('Switch back');
+  const unused = pythonBanks.find((b) => b.id !== attempt.bankId)!;
+  await db.assessmentBank.update({
+    where: { id: unused.id },
+    data: { content: '{"partial":true}', digest: 'corrupt' },
+  });
+  await startAssessment(uid, 'diagnostic');
+  const repaired = await db.assessmentBank.findUniqueOrThrow({ where: { id: unused.id } });
+  expect(repaired.content).toBe(JSON.stringify(unused));
+  expect(repaired.digest).not.toBe('corrupt');
   await selectRole(uid, 'python-developer');
 });
 it('grades complete mixed evidence, seals attempts and exposes no private keys', async () => {
