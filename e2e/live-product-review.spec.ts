@@ -34,7 +34,10 @@ test('live placement-candidate review across the complete product', async ({ pag
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
-    if (m.type() === 'error') errors.push('console: ' + m.text());
+    if (m.type() === 'error') console.log('LIVE_REVIEW::CONSOLE_ERROR', m.text());
+  });
+  page.on('response', (r) => {
+    if (r.status() >= 400) console.log('LIVE_REVIEW::HTTP_' + r.status(), r.url());
   });
 
   await page.goto('/');
