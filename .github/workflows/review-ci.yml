@@ -19,10 +19,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Build from a fresh install without database setup
+        run: npm run build
+        env:
+          VERCEL: '1'
       - run: cp .env.example .env
       - run: npm run setup
       - run: npm run typecheck
       - run: npm run lint
       - run: npm audit --omit=dev --omit=optional --audit-level=high
       - run: npm test
-      - run: npm run build

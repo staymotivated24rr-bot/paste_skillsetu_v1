@@ -40,6 +40,8 @@ The local `file:./dev.db` database is intentionally for laptop/demo use only. A 
 
 The application supports hosted libSQL/Turso without changing the Prisma data model.
 
+Use the default Vercel build command, `npm run build`, with Node.js 24 and development dependencies installed. The build generates the Prisma client from the current schema before compiling Next.js, including on fresh installs or cached deployments. It does not migrate or seed a database and does not need database credentials to compile. CI verifies this build before local database setup.
+
 1. Create a hosted libSQL/Turso database.
 2. Add these Vercel environment variables:
    - `TURSO_DATABASE_URL`
