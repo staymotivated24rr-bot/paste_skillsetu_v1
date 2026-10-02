@@ -30,7 +30,7 @@
 
 A source-only install using `npm ci --ignore-scripts`, without `.env`, database setup or a generated Prisma client, reproduced a TypeScript build failure (`@prisma/client` missing `PrismaClient`). The build now generates the engine-free client before Next.js compilation. The same fresh build passes with `VERCEL=1`; migrations and seeds remain separate operational commands. CI builds before copying `.env` or running setup, so this dependency cannot be masked by local setup. Typecheck, lint, all 40 unit/integration tests and the production build pass after this change.
 
-The Vercel inspect command could not retrieve the failed deployment logs because the environment has no Vercel credentials. This correction fixes a reproduced deployment-build blocker; the remote Vercel result must be checked independently.
+The Vercel inspect command could not retrieve the failed deployment logs because the environment has no Vercel credentials. Remote checks independently confirmed the correction: commit `511658b` passed Vercel deployment (`4zyvgmRMPe8gytSxvZNM83xZ56jk`) and GitHub Review CI run `36994314244`. All six local production-browser tests also pass. Deployment success does not verify hosted database configuration or live learner storage.
 
 `/workspace/artifacts/SkillSetu-MultiRole.zip` contains the full source and launch scripts, excluding credentials, databases, installed dependencies, builds and browser output. The generic SkillSetu.zip is refreshed to the same version. Install Node.js 24, extract and double-click start-skillsetu.cmd on Windows; README has terminal and macOS/Linux instructions. The terminal must remain open. Local source does not update Vercel or GitHub automatically.
 
