@@ -18,8 +18,11 @@ beforeAll(async () => {
   uid = (await createStudent('Authentic integration', 'python-developer')).id;
 });
 afterAll(() => db.$disconnect());
-it('persists selection, version and snapshot, resumes and checks ownership/order', async () => {
+it('self-heals missing published banks, persists version/snapshot, resumes and checks ownership/order', async () => {
+  await db.assessmentBank.deleteMany({ where: { roleId: 'python-developer' } });
+  expect(await db.assessmentBank.count({ where: { roleId: 'python-developer' } })).toBe(0);
   attemptId = await startAssessment(uid, 'diagnostic');
+  expect(await db.assessmentBank.count({ where: { roleId: 'python-developer' } })).toBe(5);
   expect(await startAssessment(uid, 'diagnostic')).toBe(attemptId);
   const attempt = (await getState(uid)).attempts[0];
   expect(attempt.bankId).toBeTruthy();
