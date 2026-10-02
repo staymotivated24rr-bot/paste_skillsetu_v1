@@ -4,18 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
-    "build": "npm run db:generate && next build",
+    "build": "npm run db:generate && node --import tsx prisma/build-setup.ts && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:generate": "node --env-file-if-exists=.env --import tsx prisma/generate.ts",
-    "db:migrate": "node --env-file-if-exists=.env --import tsx prisma/migrate.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
     "setup": "npm run db:generate && npm run db:migrate && npm run db:seed",
-    "db:migrate:hosted": "node --env-file-if-exists=.env --import tsx prisma/migrate-hosted.ts",
-    "setup:hosted": "npm run db:generate && npm run db:migrate:hosted && npm run db:seed"
+    "db:migrate:hosted": "npm run db:migrate",
+    "setup:hosted": "npm run setup"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",

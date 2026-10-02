@@ -9,7 +9,7 @@ const securityHeaders = [
 
 const config: NextConfig = {
   poweredByHeader: false,
-  serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client'],
+  serverExternalPackages: ['@prisma/client'],
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },

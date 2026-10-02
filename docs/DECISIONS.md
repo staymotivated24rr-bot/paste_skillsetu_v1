@@ -22,3 +22,5 @@
 - Add an immutable two-column migration, defaulting legacy learners/cohorts to Data Analyst. Reuse all engines and screens; keep only content and public metadata per role.
 - Binary action credit remains explicit. Mapping weights capture skill relevance; coarse evidence is shown honestly. Employer targets for new tracks are five points stricter than role targets and explicitly fictional.
 - Store migration checksum and libSQL schema changes atomically, verified with the same client against local SQLite. Hosted network/database validation remains outside local evidence.
+
+- 2026-10-02: Founder approved migration from SQLite/libSQL to Neon PostgreSQL for durable Vercel persistence. Keep the Next.js monolith and Prisma data model; switch the datasource/provider and runtime to PostgreSQL, apply checked-in Prisma migrations with `prisma migrate deploy`, and use `DATABASE_URL` as the only production database secret. CI verifies migrations and integration tests against PostgreSQL 16 before production cutover.

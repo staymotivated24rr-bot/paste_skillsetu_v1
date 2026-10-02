@@ -9,7 +9,7 @@ export async function GET() {
   return NextResponse.json(
     {
       ok: !issue,
-      database: configuredDatabaseUrl().startsWith('file:') ? 'local-sqlite' : 'hosted-libsql',
+      database: configuredDatabaseUrl() ? 'hosted-postgresql' : 'unconfigured',
       ...(issue ? { issue } : {}),
     },
     {

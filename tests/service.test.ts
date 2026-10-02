@@ -1,6 +1,5 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { rmSync } from 'node:fs';
 import { db } from '../src/lib/db';
 import {
   answerAssessment,
@@ -17,12 +16,14 @@ import { diagnostic, reassessment } from '../src/lib/simulations';
 import { lessons } from '../src/lib/lessons';
 let uid = '';
 beforeAll(async () => {
-  rmSync('/tmp/skillsetu-vitest.db', { force: true });
-  for (const script of ['prisma/migrate.ts', 'prisma/seed.ts'])
-    execFileSync(process.execPath, ['--import', 'tsx', script], {
-      env: process.env,
-      stdio: 'pipe',
-    });
+  execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {
+    env: process.env,
+    stdio: 'pipe',
+  });
+  execFileSync(process.execPath, ['--import', 'tsx', 'prisma/seed.ts'], {
+    env: process.env,
+    stdio: 'pipe',
+  });
   uid = (await createStudent('Integration learner')).id;
 });
 afterAll(() => db.$disconnect());
