@@ -15,11 +15,25 @@ export async function ensurePublishedPythonBanks() {
     const digest = createHash('sha256').update(content).digest('hex');
     const current = known.get(bank.id);
     if (current) {
-      if (current.digest !== digest || current.content !== content)
-        throw new AppError(
-          `Published assessment bank ${bank.id} does not match the immutable application copy.`,
-          500,
-        );
+      if (current.digest !== digest || current.content !== content) {
+        const references = await db.assessmentAttempt.count({ where: { bankId: bank.id } });
+        if (references)
+          throw new AppError(
+            `Published assessment bank ${bank.id} does not match the immutable application copy.`,
+            500,
+          );
+        await db.assessmentBank.update({
+          where: { id: bank.id },
+          data: {
+            roleId: bank.roleId,
+            kind: bank.kind,
+            version: bank.version,
+            contentVersion: bank.contentVersion,
+            content,
+            digest,
+          },
+        });
+      }
       continue;
     }
     const row = await db.assessmentBank.upsert({
