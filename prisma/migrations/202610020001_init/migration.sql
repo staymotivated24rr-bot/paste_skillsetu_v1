@@ -1,9 +1,9 @@
--- Initial SQLite schema. Prisma schema is the model source; add future SQL migrations without editing applied files.
+-- Initial PostgreSQL schema. Prisma schema is the model source; add future SQL migrations without editing applied files.
 
 CREATE TABLE "User" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "name" TEXT NOT NULL,
-  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "Role" (
@@ -72,7 +72,7 @@ CREATE TABLE "AssessmentQuestion" (
 CREATE TABLE "QuestionSkillMapping" (
   "questionId" TEXT NOT NULL,
   "skillId" TEXT NOT NULL,
-  "weight" REAL NOT NULL DEFAULT 1,
+  "weight" DOUBLE PRECISION NOT NULL DEFAULT 1,
   FOREIGN KEY ("questionId") REFERENCES "AssessmentQuestion"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   FOREIGN KEY ("skillId") REFERENCES "SkillNode"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   PRIMARY KEY ("questionId", "skillId")
@@ -83,8 +83,8 @@ CREATE TABLE "AssessmentAttempt" (
   "userId" TEXT NOT NULL,
   "assessmentId" TEXT NOT NULL,
   "status" TEXT NOT NULL DEFAULT 'in_progress',
-  "startedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "completedAt" DATETIME,
+  "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "completedAt" TIMESTAMP(3),
   "score" INTEGER,
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   FOREIGN KEY ("assessmentId") REFERENCES "Assessment"("id") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -98,8 +98,8 @@ CREATE TABLE "AssessmentAnswer" (
   "questionId" TEXT NOT NULL,
   "selected" INTEGER NOT NULL,
   "correct" BOOLEAN NOT NULL,
-  "score" REAL NOT NULL,
-  "answeredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "score" DOUBLE PRECISION NOT NULL,
+  "answeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY ("attemptId") REFERENCES "AssessmentAttempt"("id") ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY ("questionId") REFERENCES "AssessmentQuestion"("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -121,7 +121,7 @@ CREATE TABLE "LearningPath" (
   "userId" TEXT NOT NULL,
   "attemptId" TEXT NOT NULL,
   "skillIds" TEXT NOT NULL,
-  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   FOREIGN KEY ("attemptId") REFERENCES "AssessmentAttempt"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -146,7 +146,7 @@ CREATE TABLE "LessonProgress" (
   "mode" TEXT NOT NULL DEFAULT 'interactive',
   "run" INTEGER NOT NULL DEFAULT 1,
   "status" TEXT NOT NULL DEFAULT 'started',
-  "updatedAt" DATETIME NOT NULL,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   FOREIGN KEY ("lessonId") REFERENCES "Lesson"("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -161,14 +161,14 @@ CREATE TABLE "PracticeAnswer" (
   "selected" INTEGER NOT NULL,
   "correct" BOOLEAN NOT NULL,
   "first" BOOLEAN NOT NULL,
-  "answeredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "answeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY ("progressId") REFERENCES "LessonProgress"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE "ReadinessReport" (
   "attemptId" TEXT NOT NULL PRIMARY KEY,
   "indicator" TEXT NOT NULL,
-  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY ("attemptId") REFERENCES "AssessmentAttempt"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
