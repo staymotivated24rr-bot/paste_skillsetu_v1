@@ -1,0 +1,13 @@
+# Decisions
+- 2026-10-02: Existing eddict_v1 repository is the product repository, per founder.
+- Three text-based workplace simulations, 8 scored actions each, replace isolated-quiz-led diagnosis. Structured choices give reproducible grading; stakeholder follow-ups depend on each choice. All needed data remains accessible after a poor clarification choice, avoiding cascading penalties.
+- English, demo sessions, fictional cohort, local delivery adopted from preflight defaults.
+- Monolithic Next.js/TypeScript, Prisma 6/SQLite, Zod. No remote runtime dependencies. UUID cookie sessions isolate demo students; placement dashboard is intentionally public fictional data, not production access control.
+- Sixteen granular skills include requirement clarification and communication alongside analytics. Every assessment item has explicit weighted skill mappings. Few items per skill mean coarse prototype evidence, disclosed in UI/report.
+- Required thresholds and importance weight gap severity; unmet prerequisites are ordered first. Already-demonstrated skills are excluded.
+- Readiness is an importance-weighted demonstrated score; meeting the prototype threshold requires every role skill to meet its target. Employer comparison uses a separate stricter fictional profile.
+- Assessment grades are server-owned and final scores use actual answers. Latest complete reassessment replaces current scores; the first completed diagnostic is the baseline. Learning mastery never changes assessment scores.
+- Original deterministic lessons share content between interactive and structured modes. Practice mastery requires at least 3/4 correct first responses in the current run including the harder application; retries teach but do not inflate mastery. A new run can verify mastery after practice.
+- Local provider abstraction supplies hints/explanations; future AI integrations must respect it and maintain a deterministic fallback. No AI claims or API keys.
+- Engine-free Prisma runtime chosen after the environment denied binaries.prisma.sh. @prisma/adapter-libsql reads local SQLite; a pinned @prisma/internals generation script uses the bundled WASM compiler without native bootstrap downloads. Checked-in SQL migrations run atomically with node:sqlite and stored checksums. Node 22.13+ required; Node 24 recommended. This retains Prisma and costs nothing, but the internal generator API must be revisited when upgrading Prisma.
+- Browser origin validation compares the incoming Host with Origin. Next.js may expose an internal bind address in its URL, which is not necessarily the browser's legitimate host. No cross-origin submission is permitted.
