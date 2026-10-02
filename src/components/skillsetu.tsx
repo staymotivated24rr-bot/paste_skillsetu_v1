@@ -21,6 +21,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { roleCatalog } from '@/lib/role-catalog';
 import type { DemoState } from '@/lib/types';
 import { planGaps, readiness, readinessLabel } from '@/lib/engine';
 import { Cohort } from './cohort';
@@ -44,6 +45,7 @@ export function SkillSetu() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [selectedRole, setSelectedRole] = useState('data-analyst');
   const [name, setName] = useState('Demo student');
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -125,17 +127,30 @@ export function SkillSetu() {
   }
   async function enter() {
     await action(async () => {
-      await post({ action: 'enter', name });
+      await post({ action: 'enter', name, roleId: selectedRole });
       await refresh();
       navigate('workspace');
     });
   }
   async function start(kind: 'diagnostic' | 'reassessment') {
     await action(async () => {
-      const d = await post<{ attemptId: string }>({ action: 'start', kind });
+      const d = await post<{ attemptId: string }>({
+        action: 'start',
+        kind,
+        roleId: state?.role.id,
+      });
       setActiveId(d.attemptId);
       await refresh();
       navigate('assessment');
+    });
+  }
+  async function switchRole(roleId: string) {
+    await action(async () => {
+      await post({ action: 'select-role', roleId });
+      setActiveId(null);
+      setLessonId(null);
+      await refresh();
+      navigate('workspace');
     });
   }
   async function openLesson(id: string) {
@@ -191,7 +206,10 @@ export function SkillSetu() {
         </header>
       ) : (
         <>
-          <aside id="product-navigation" className={`sidebar no-print ${mobileMenu ? 'sidebar-open' : ''}`}>
+          <aside
+            id="product-navigation"
+            className={`sidebar no-print ${mobileMenu ? 'sidebar-open' : ''}`}
+          >
             <button className="brand" onClick={() => navigate('home')}>
               <Brand />
             </button>
@@ -255,10 +273,23 @@ export function SkillSetu() {
               </b>
             </div>
             <div>
-              <span className="badge desktop-only">
-                <BriefcaseBusiness size={13} />
-                Data Analyst
-              </span>
+              {state && view !== 'college' && (
+                <label className="role-switch">
+                  <span>Target role</span>
+                  <select
+                    aria-label="Target role"
+                    value={state.role.id}
+                    disabled={busy}
+                    onChange={(e) => safely(() => switchRole(e.target.value))}
+                  >
+                    {state.roles.map((role) => (
+                      <option value={role.id} key={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {state && (
                 <button
                   className="text-btn new-demo"
@@ -300,7 +331,14 @@ export function SkillSetu() {
             Opening your workspace…
           </div>
         ) : !state ? (
-          <Onboarding name={name} setName={setName} enter={() => safely(enter)} busy={busy} />
+          <Onboarding
+            roleId={selectedRole}
+            setRoleId={setSelectedRole}
+            name={name}
+            setName={setName}
+            enter={() => safely(enter)}
+            busy={busy}
+          />
         ) : (
           <>
             {view === 'workspace' && (
@@ -325,15 +363,15 @@ export function SkillSetu() {
                   <div className="workspace-hero">
                     <div>
                       <span className="eyebrow">YOUR TARGET ROLE</span>
-                      <h2>Data Analyst</h2>
+                      <h2>{state.role.name}</h2>
                       <p>
-                        Turn information into decisions. Start with three realistic workplace cases
-                        to find which skills need your attention.
+                        {state.role.description} {state.role.work} Start with three realistic
+                        workplace cases to find which skills need your attention.
                       </p>
                       <div className="tags">
                         <span className="tag">3 workplace simulations</span>
                         <span className="tag">24 applied decisions</span>
-                        <span className="tag">16 measurable skills</span>
+                        <span className="tag">{state.skills.length} measurable skills</span>
                       </div>
                       <button
                         className="btn btn-primary"
@@ -343,7 +381,7 @@ export function SkillSetu() {
                         {inProgress ? 'Resume workplace diagnostic' : 'Begin workplace diagnostic'}
                         <ArrowRight size={17} />
                       </button>
-                      <small>No timer. No trick questions. Roughly 20–30 minutes.</small>
+                      <small>No timer. No trick questions. Roughly {state.role.duration}.</small>
                     </div>
                     <div className="role-art">
                       <div className="role-art-grid" />
@@ -499,7 +537,7 @@ export function SkillSetu() {
                   text={
                     latest
                       ? 'Use three different workplace cases to measure your current skills. Results may improve, stay flat, or decline — we’ll show them honestly.'
-                      : 'Work with three virtual stakeholders. Clarify their requests, interpret case files, choose analytical actions, and give a decision-ready summary. All 24 actions contribute to your skill map.'
+                      : 'Work with three virtual stakeholders. Clarify their requests, interpret case files, choose role-specific actions, and give a stakeholder-ready summary. All 24 actions contribute to your skill map.'
                   }
                   action={
                     <button
@@ -603,11 +641,15 @@ function Brand() {
   );
 }
 function Onboarding({
+  roleId,
+  setRoleId,
   name,
   setName,
   enter,
   busy,
 }: {
+  roleId: string;
+  setRoleId: (id: string) => void;
   name: string;
   setName: (n: string) => void;
   enter: () => void;
@@ -621,16 +663,26 @@ function Onboarding({
         Try the complete student journey, from a workplace diagnostic to a personalized learning
         plan and verified progress.
       </p>
-      <div className="selected-role">
-        <div className="role-icon">
-          <BarChart3 size={27} />
-        </div>
-        <div>
-          <span className="small muted">YOUR TARGET ROLE</span>
-          <h2>Data Analyst</h2>
-          <p>SQL · spreadsheets · Python · statistics · workplace skills</p>
-        </div>
-        <CheckCircle2 size={23} />
+      <div className="role-options" aria-label="Choose your target role">
+        {roleCatalog.map((role) => (
+          <button
+            type="button"
+            key={role.id}
+            className={`role-choice ${roleId === role.id ? 'role-selected' : ''}`}
+            aria-pressed={roleId === role.id}
+            disabled={busy}
+            onClick={() => setRoleId(role.id)}
+          >
+            <span className="role-choice-heading">
+              <strong>{role.name}</strong>
+              {roleId === role.id && <CheckCircle2 size={20} />}
+            </span>
+            <span>{role.description}</span>
+            <span className="small">{role.work}</span>
+            <span className="small muted">{role.categories.join(' · ')}</span>
+            <span className="small">3 cases · 24 actions · {role.duration}</span>
+          </button>
+        ))}
       </div>
       <form
         onSubmit={(e) => {
@@ -659,8 +711,8 @@ function Onboarding({
         </button>
       </form>
       <p className="small muted">
-        Progress is saved to this browser’s demo session and the local SQLite database. Use “New
-        demo session” to start a separate learner.
+        Progress is saved to this browser’s demo session and the application database. Use “New demo
+        session” to start a separate learner.
       </p>
     </div>
   );
@@ -781,7 +833,7 @@ function Landing({ student, college }: { student: () => void; college: () => voi
             {
               icon: ClipboardCheck,
               title: 'Diagnose',
-              text: 'Respond to virtual stakeholders and work through realistic analyst decisions.',
+              text: 'Respond to virtual stakeholders and work through realistic analyst and developer decisions.',
             },
             {
               icon: Target,
@@ -814,13 +866,13 @@ function Landing({ student, college }: { student: () => void; college: () => voi
         <div>
           <span className="eyebrow">START FOCUSED. GROW WITH EVIDENCE.</span>
           <h2>
-            One role. Real decisions.
+            Three roles. Real decisions.
             <br />A better learning path.
           </h2>
           <p>
-            The first SkillSetu experience focuses on Data Analyst readiness for engineering
-            students. Original content, structured simulations, and deterministic scoring keep the
-            complete demo local and affordable.
+            Choose Data Analyst, Python Developer, or Java Developer. Original workplace cases,
+            targeted lessons, and independent role progress keep your learning focused and the
+            complete demo affordable.
           </p>
           <button className="btn btn-primary" onClick={student}>
             Try the student experience

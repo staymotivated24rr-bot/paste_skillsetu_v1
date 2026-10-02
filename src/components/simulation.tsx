@@ -47,7 +47,7 @@ export function SimulationRunner({
           </span>
           <h1>
             {attempt.kind === 'diagnostic'
-              ? 'Step into the analyst’s seat.'
+              ? `Step into the ${state.role.name.toLowerCase()}’s seat.`
               : 'New cases. Fresh evidence.'}
           </h1>
           <p>Make the calls you would make at work. Your responses are saved as you go.</p>

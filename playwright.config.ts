@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -7,7 +8,9 @@ export default defineConfig({
   expect: { timeout: 15000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL,
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
     browserName: 'chromium',
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined,
@@ -18,7 +21,7 @@ export default defineConfig({
   },
   webServer: {
     command: process.env.E2E_SERVER_COMMAND ?? 'npm run dev',
-    url: 'http://127.0.0.1:3000',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

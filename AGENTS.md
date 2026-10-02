@@ -1,9 +1,12 @@
 # SkillSetu durable instructions
-Build a locally runnable, original Data Analyst job-readiness MVP: applied workplace diagnostic → measured gaps → targeted learning → practice → reassessment → prototype report.
+
+Build a locally runnable, original three-role job-readiness MVP (Data Analyst, Python Developer, Java Developer): applied workplace diagnostic → measured gaps → targeted learning → practice → reassessment → prototype report.
 Use Next.js/TypeScript, Prisma/SQLite, Zod, Vitest, Playwright. No paid service or API key required. No employment guarantees or scientific-validation claims.
 Founder preflight is complete: use this repository; English for engineering students; demo student/officer access; local delivery. Diagnostic must primarily use three text-based structured workplace simulations with stakeholder clarification and action-to-skill scoring, including communication. No voice/3D.
 Continue autonomously through unblocked milestones; do not repeatedly ask permission. Make reversible defaults and record important decisions. Track genuine open questions in docs/PENDING_QUESTIONS.md. On founder messages, inspect that file and surface only still-material unresolved questions.
 Keep docs/STATUS.md accurate, preserve spec and acceptance criteria, and resume from the next executable task. Never fabricate progress or test results. Server owns scoring; mastery needs submitted answers. Run unit/integration tests, typecheck, lint, build, and browser journey checks. Protect credentials and avoid real personal data. Seed fictional cohort separately from live demo progress.
 
 Runtime/setup: Node 24 recommended (22.13+ minimum). npm ci --ignore-scripts, copy .env.example to .env, npm run setup, npm run dev. Prisma 6.19 packages are pinned together; generation uses bundled WASM via a pinned internal API, SQLite uses the libsql driver adapter, and migrations are checked-in SQL with node:sqlite checksum/transaction handling. Do not replace this with a native-engine download requirement. Add immutable migrations for schema changes.
-Verification baseline: 18 Vitest tests, 3 production-browser tests, typecheck/lint/build, clean install and repeat setup passed. See docs/STATUS.md for final verified state and docs/ARCHITECTURE.md for limitations.
+Current verification: 40 Vitest tests, 6 production-browser tests, typecheck/lint/build, clean install and repeat setup passed. See docs/STATUS.md for final verified state and docs/ARCHITECTURE.md for limitations.
+
+Current founder scope (2026-10-02): resume and complete Python Developer and Java Developer in paste_skillsetu_v1, preserving its Data Analyst content, records, and deployment safeguards. Approved defaults: role switching retains independent progress; no cross-role proficiency credit. Continue through tests, typecheck, lint, build, browser journeys, documentation and runnable delivery without approval pauses.

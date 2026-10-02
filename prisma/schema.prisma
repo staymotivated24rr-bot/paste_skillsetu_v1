@@ -10,6 +10,7 @@ datasource db {
 model User {
   id        String @id @default(uuid())
   name      String
+  selectedRoleId String @default("data-analyst")
   createdAt DateTime @default(now())
   attempts  AssessmentAttempt[]
   progress  LessonProgress[]
@@ -184,6 +185,7 @@ model College {
   cohorts Cohort[]
 }
 model Cohort {
+  roleId String @default("data-analyst")
   id        String @id
   collegeId String
   name      String

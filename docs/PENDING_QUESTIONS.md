@@ -1,6 +1,7 @@
 # Pending founder questions
-No unresolved founder questions.
 
-Preflight resolved: build in eddict_v1. Founder replaced quiz-led diagnostic with three applied workplace simulations. Other proposed defaults adopted: English/beginner-accessible, demo access, local no-cost Next.js/Prisma/SQLite delivery. No timed assumption is pending.
+No unresolved implementation questions.
 
-New entries must record ID, status, question, why it matters, recommended default, affected feature, temporary decision, date/sequence raised, and resolution.
+2026-10-02: Founder approved defaults and resumed the complete three-role specification on the updated paste_skillsetu_v1 base. Learners may switch tracks without losing progress; each role has independent evidence.
+
+Hosted verification remains an external limitation: no hosted database credentials are configured. Local delivery is the implementation target; hosted support must remain intact.

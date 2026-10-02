@@ -1,3 +1,4 @@
+import { roleCatalog } from '@/lib/role-catalog';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
@@ -12,15 +13,26 @@ import {
   practiceAction,
   reviewAttempt,
   startAssessment,
+  selectRole,
 } from '@/lib/service';
 import { db, deploymentDatabaseIssue } from '@/lib/db';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const cookieName = 'skillsetu-demo';
 const id = z.string().min(1).max(100);
+const roleId = id.refine((value) => roleCatalog.some((role) => role.id === value), 'Unknown role');
 const schema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('enter'), name: z.string().trim().min(1).max(40) }),
-  z.object({ action: z.literal('start'), kind: z.enum(['diagnostic', 'reassessment']) }),
+  z.object({
+    action: z.literal('enter'),
+    name: z.string().trim().min(1).max(40),
+    roleId: roleId.optional(),
+  }),
+  z.object({ action: z.literal('select-role'), roleId }),
+  z.object({
+    action: z.literal('start'),
+    kind: z.enum(['diagnostic', 'reassessment']),
+    roleId: roleId.optional(),
+  }),
   z.object({
     action: z.literal('answer'),
     attemptId: id,
@@ -66,9 +78,15 @@ export async function GET(req: NextRequest) {
   try {
     const databaseIssue = deploymentDatabaseIssue();
     if (databaseIssue)
-      return NextResponse.json({ error: databaseIssue }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+      return NextResponse.json(
+        { error: databaseIssue },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
     if (req.nextUrl.searchParams.get('view') === 'cohort')
-      return NextResponse.json(await cohortState(), { headers: { 'Cache-Control': 'no-store' } });
+      return NextResponse.json(
+        await cohortState(req.nextUrl.searchParams.get('roleId') ?? 'data-analyst'),
+        { headers: { 'Cache-Control': 'no-store' } },
+      );
     const uid = await userId();
     const review = req.nextUrl.searchParams.get('review');
     return NextResponse.json(review ? await reviewAttempt(uid, review) : await getState(uid), {
@@ -82,7 +100,10 @@ export async function POST(req: NextRequest) {
   try {
     const databaseIssue = deploymentDatabaseIssue();
     if (databaseIssue)
-      return NextResponse.json({ error: databaseIssue }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+      return NextResponse.json(
+        { error: databaseIssue },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
     const origin = req.headers.get('origin');
     if (origin) {
       let originUrl: URL;
@@ -108,7 +129,7 @@ export async function POST(req: NextRequest) {
         (await db.user.findUnique({ where: { id: existing } }))
       )
         return NextResponse.json({ ok: true });
-      const user = await createStudent(body.name);
+      const user = await createStudent(body.name, body.roleId);
       const response = NextResponse.json({ ok: true });
       response.cookies.set(cookieName, user.id, {
         httpOnly: true,
@@ -126,8 +147,11 @@ export async function POST(req: NextRequest) {
     }
     const uid = await userId();
     switch (body.action) {
+      case 'select-role':
+        await selectRole(uid, body.roleId);
+        return NextResponse.json({ ok: true });
       case 'start':
-        return NextResponse.json({ attemptId: await startAssessment(uid, body.kind) });
+        return NextResponse.json({ attemptId: await startAssessment(uid, body.kind, body.roleId) });
       case 'answer':
         return NextResponse.json(
           await answerAssessment(uid, body.attemptId, body.questionId, body.selected),

@@ -1,3 +1,4 @@
+import { roleCatalog, roleConfig } from './role-catalog';
 import { db } from './db';
 import { mastery, planGaps, readiness, readinessLabel, scoreAssessment } from './engine';
 import { provider } from './provider';
@@ -10,9 +11,10 @@ export class AppError extends Error {
     super(message);
   }
 }
-export async function getSkills(): Promise<Skill[]> {
+export async function getSkills(roleId = 'data-analyst'): Promise<Skill[]> {
+  checkedRole(roleId);
   const rows = await db.roleSkillRequirement.findMany({
-    where: { roleId: 'data-analyst' },
+    where: { roleId },
     include: { skill: { include: { category: true } } },
   });
   return rows.map((r) => ({
@@ -25,14 +27,33 @@ export async function getSkills(): Promise<Skill[]> {
     importance: r.importance,
   }));
 }
-export async function createStudent(name: string) {
-  return db.user.create({ data: { name } });
+function checkedRole(roleId: string) {
+  if (!roleCatalog.some((r) => r.id === roleId)) throw new AppError('Unknown target role.');
+  return roleConfig(roleId);
+}
+async function activeRole(userId: string) {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError('Your demo session has expired. Start a new student demo.', 401);
+  return checkedRole(user.selectedRoleId);
+}
+export async function selectRole(userId: string, roleId: string) {
+  checkedRole(roleId);
+  await activeRole(userId);
+  await db.user.update({ where: { id: userId }, data: { selectedRoleId: roleId } });
+}
+export async function createStudent(name: string, roleId = 'data-analyst') {
+  checkedRole(roleId);
+  return db.user.create({ data: { name, selectedRoleId: roleId } });
 }
 export async function getState(userId: string): Promise<DemoState> {
+  const role = await activeRole(userId);
+  const roleId = role.id;
+  const lessonScope = { skill: { requirements: { some: { roleId } } } };
   const [user, skills, assessments, attempts, lessons, progress, employer] = await Promise.all([
-    db.user.findUnique({ where: { id: userId }, select: { id: true, name: true } }),
-    getSkills(),
+    db.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, name: true } }),
+    getSkills(roleId),
     db.assessment.findMany({
+      where: { roleId },
       include: {
         scenarios: {
           orderBy: { position: 'asc' },
@@ -41,7 +62,7 @@ export async function getState(userId: string): Promise<DemoState> {
       },
     }),
     db.assessmentAttempt.findMany({
-      where: { userId },
+      where: { userId, assessment: { roleId } },
       orderBy: { startedAt: 'asc' },
       include: {
         assessment: true,
@@ -55,17 +76,16 @@ export async function getState(userId: string): Promise<DemoState> {
         scores: true,
       },
     }),
-    db.lesson.findMany(),
+    db.lesson.findMany({ where: lessonScope }),
     db.lessonProgress.findMany({
-      where: { userId },
+      where: { userId, lesson: lessonScope },
       include: { answers: { orderBy: { answeredAt: 'asc' } }, lesson: true },
     }),
     db.employerProfile.findUniqueOrThrow({
-      where: { id: 'sample-employer' },
+      where: { id: role.employerId },
       include: { requirements: true },
     }),
   ]);
-  if (!user) throw new AppError('Your demo session has expired. Start a new student demo.', 401);
   const scenarios = Object.fromEntries(
     assessments.map((a) => [
       a.kind,
@@ -89,6 +109,8 @@ export async function getState(userId: string): Promise<DemoState> {
     ]),
   ) as DemoState['scenarios'];
   return {
+    role,
+    roles: roleCatalog,
     user,
     skills,
     scenarios,
@@ -141,14 +163,22 @@ export async function getState(userId: string): Promise<DemoState> {
     },
   };
 }
-export async function startAssessment(userId: string, kind: 'diagnostic' | 'reassessment') {
+export async function startAssessment(
+  userId: string,
+  kind: 'diagnostic' | 'reassessment',
+  expectedRoleId?: string,
+) {
+  const role = await activeRole(userId);
+  if (expectedRoleId && role.id !== expectedRoleId)
+    throw new AppError('Your target role changed. Refresh before starting an assessment.', 409);
+  const assessmentId = role.assessmentIds[kind];
   return db.$transaction(async (tx) => {
     const existing = await tx.assessmentAttempt.findFirst({
-      where: { userId, assessmentId: kind, status: 'in_progress' },
+      where: { userId, assessmentId, status: 'in_progress' },
     });
     if (existing) return existing.id;
     const baseline = await tx.assessmentAttempt.findFirst({
-      where: { userId, assessmentId: 'diagnostic', status: 'complete' },
+      where: { userId, assessmentId: role.assessmentIds.diagnostic, status: 'complete' },
     });
     if (kind === 'reassessment' && !baseline)
       throw new AppError('Complete a diagnostic before reassessment.');
@@ -156,7 +186,7 @@ export async function startAssessment(userId: string, kind: 'diagnostic' | 'reas
       throw new AppError(
         'Your baseline is already recorded. Use reassessment to verify current skills.',
       );
-    return (await tx.assessmentAttempt.create({ data: { userId, assessmentId: kind } })).id;
+    return (await tx.assessmentAttempt.create({ data: { userId, assessmentId } })).id;
   });
 }
 export async function answerAssessment(
@@ -165,6 +195,10 @@ export async function answerAssessment(
   questionId: string,
   selected: number,
 ) {
+  const session = await db.user.findUnique({
+    where: { id: userId },
+    select: { selectedRoleId: true },
+  });
   return db.$transaction(async (tx) => {
     const attempt = await tx.assessmentAttempt.findFirst({
       where: { id: attemptId, userId },
@@ -181,6 +215,11 @@ export async function answerAssessment(
       },
     });
     if (!attempt) throw new AppError('Assessment not found.', 404);
+    if (attempt.assessment.roleId !== session?.selectedRoleId)
+      throw new AppError(
+        'This assessment belongs to another target role. Switch back to continue.',
+        409,
+      );
     if (attempt.status !== 'in_progress')
       throw new AppError('This assessment has already been submitted.', 409);
     const questions = attempt.assessment.scenarios.flatMap((s) => s.questions);
@@ -208,7 +247,8 @@ export async function answerAssessment(
   });
 }
 export async function completeAssessment(userId: string, attemptId: string) {
-  const skills = await getSkills();
+  const role = await activeRole(userId);
+  const skills = await getSkills(role.id);
   return db.$transaction(async (tx) => {
     const attempt = await tx.assessmentAttempt.findFirst({
       where: { id: attemptId, userId },
@@ -220,6 +260,11 @@ export async function completeAssessment(userId: string, attemptId: string) {
       },
     });
     if (!attempt) throw new AppError('Assessment not found.', 404);
+    if (attempt.assessment.roleId !== role.id)
+      throw new AppError(
+        'This assessment belongs to another target role. Switch back to submit.',
+        409,
+      );
     if (attempt.status === 'complete') return attemptId;
     const questions = attempt.assessment.scenarios.flatMap((s) => s.questions);
     if (attempt.answers.length !== questions.length)
@@ -248,16 +293,25 @@ export async function completeAssessment(userId: string, attemptId: string) {
     return attemptId;
   });
 }
+async function roleLesson(userId: string, lessonId: string) {
+  const role = await activeRole(userId);
+  const lesson = await db.lesson.findFirst({
+    where: { id: lessonId, skill: { requirements: { some: { roleId: role.id } } } },
+  });
+  if (!lesson) throw new AppError('Lesson not found for your target role.', 404);
+  const baseline = await db.assessmentAttempt.findFirst({
+    where: { userId, assessmentId: role.assessmentIds.diagnostic, status: 'complete' },
+  });
+  if (!baseline) throw new AppError('Take the diagnostic first.');
+  return lesson;
+}
 export async function lessonAction(
   userId: string,
   lessonId: string,
   mode: 'interactive' | 'structured',
   restart = false,
 ) {
-  const l = await db.lesson.findUnique({ where: { id: lessonId } });
-  if (!l) throw new AppError('Lesson not found.', 404);
-  const baseline = await db.assessmentAttempt.findFirst({ where: { userId, status: 'complete' } });
-  if (!baseline) throw new AppError('Take the diagnostic first.');
+  await roleLesson(userId, lessonId);
   return db.$transaction(async (tx) => {
     const old = await tx.lessonProgress.findUnique({
       where: { userId_lessonId: { userId, lessonId } },
@@ -276,8 +330,7 @@ export async function practiceAction(
   itemId: string,
   selected?: number,
 ) {
-  const l = await db.lesson.findUnique({ where: { id: lessonId } });
-  if (!l) throw new AppError('Lesson not found.', 404);
+  const l = await roleLesson(userId, lessonId);
   const content = JSON.parse(l.content) as LessonContent;
   const item = content.items.find((i) => i.id === itemId);
   if (!item) throw new AppError('Practice item not found.', 404);
@@ -310,15 +363,18 @@ export async function practiceAction(
     return { correct, explanation, mastery: result };
   });
 }
-export async function cohortState(): Promise<CohortView> {
+export async function cohortState(roleId = 'data-analyst'): Promise<CohortView> {
+  const role = checkedRole(roleId);
   const [cohort, skills] = await Promise.all([
     db.cohort.findUniqueOrThrow({
-      where: { id: 'demo-cohort' },
+      where: { id: role.cohortId },
       include: { college: true, members: { orderBy: { alias: 'asc' } } },
     }),
-    getSkills(),
+    getSkills(roleId),
   ]);
   return {
+    role,
+    roles: roleCatalog,
     college: cohort.college.name,
     cohort: cohort.name,
     skills,
@@ -333,8 +389,9 @@ export async function cohortState(): Promise<CohortView> {
   };
 }
 export async function reviewAttempt(userId: string, attemptId: string) {
+  const role = await activeRole(userId);
   const attempt = await db.assessmentAttempt.findFirst({
-    where: { id: attemptId, userId, status: 'complete' },
+    where: { id: attemptId, userId, status: 'complete', assessment: { roleId: role.id } },
     include: {
       answers: {
         orderBy: [
