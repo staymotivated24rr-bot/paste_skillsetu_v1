@@ -60,4 +60,4 @@
 
 29. **Production deployment status.** Both normal production and `VERCEL=1` build paths are verified locally. Vercel-mode build generates Prisma and static Python assets while skipping database writes. Apply the additive migration and idempotent seed only through a trusted operation targeting an explicitly selected hosted database before promotion. This branch does not merge or deploy production, reset Neon or execute a production migration. Review CI executes the full command and browser suite and uploads evidence; inspect the PR checks before promotion. A preview build does not authorize migration of a shared production database.
 
-30. **Pull request link.** Pending creation after final verification; target `main`. No automatic merge.
+30. **Pull request link.** [PR #4](https://github.com/staymotivated24rr-bot/paste_skillsetu_v1/pull/4), targeting `main` from `feat/python-authentic-readiness`. No automatic merge.
