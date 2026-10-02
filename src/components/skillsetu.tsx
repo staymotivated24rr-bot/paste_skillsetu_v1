@@ -191,7 +191,7 @@ export function SkillSetu() {
         </header>
       ) : (
         <>
-          <aside className={`sidebar no-print ${mobileMenu ? 'sidebar-open' : ''}`}>
+          <aside id="product-navigation" className={`sidebar no-print ${mobileMenu ? 'sidebar-open' : ''}`}>
             <button className="brand" onClick={() => navigate('home')}>
               <Brand />
             </button>
@@ -216,6 +216,7 @@ export function SkillSetu() {
             <nav>
               <button
                 className={view === 'college' ? 'active' : ''}
+                aria-current={view === 'college' ? 'page' : undefined}
                 onClick={() => navigate('college')}
               >
                 <GraduationCap size={19} />
@@ -225,7 +226,7 @@ export function SkillSetu() {
             <div className="sidebar-bottom">
               <div className="local-note">
                 <span className="live-dot" />
-                Local-first prototype<p>Original content. No API key needed.</p>
+                Prototype mode<p>Original content. No API key needed.</p>
               </div>
               <div className="profile">
                 <div className="avatar">{state?.user.name.slice(0, 1).toUpperCase() ?? 'D'}</div>
@@ -240,7 +241,9 @@ export function SkillSetu() {
             <div>
               <button
                 className="mobile-menu icon-btn"
-                aria-label="Open navigation"
+                aria-label={mobileMenu ? 'Close navigation' : 'Open navigation'}
+                aria-expanded={mobileMenu}
+                aria-controls="product-navigation"
                 onClick={() => setMobileMenu(!mobileMenu)}
               >
                 <Menu size={22} />
@@ -310,7 +313,7 @@ export function SkillSetu() {
                   </div>
                   <span className="badge badge-green">
                     <span className="live-dot" />
-                    Progress saved locally
+                    Progress saved for this demo session
                   </span>
                 </div>
                 <Steps

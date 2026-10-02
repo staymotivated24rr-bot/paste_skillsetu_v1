@@ -13,7 +13,7 @@ import {
   reviewAttempt,
   startAssessment,
 } from '@/lib/service';
-import { db } from '@/lib/db';
+import { db, deploymentDatabaseIssue } from '@/lib/db';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const cookieName = 'skillsetu-demo';
@@ -64,6 +64,9 @@ function failure(e: unknown) {
 }
 export async function GET(req: NextRequest) {
   try {
+    const databaseIssue = deploymentDatabaseIssue();
+    if (databaseIssue)
+      return NextResponse.json({ error: databaseIssue }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
     if (req.nextUrl.searchParams.get('view') === 'cohort')
       return NextResponse.json(await cohortState(), { headers: { 'Cache-Control': 'no-store' } });
     const uid = await userId();
@@ -77,6 +80,9 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   try {
+    const databaseIssue = deploymentDatabaseIssue();
+    if (databaseIssue)
+      return NextResponse.json({ error: databaseIssue }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
     const origin = req.headers.get('origin');
     if (origin) {
       let originUrl: URL;

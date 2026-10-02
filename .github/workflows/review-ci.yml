@@ -1,0 +1,28 @@
+name: Review CI
+
+on:
+  push:
+    branches:
+      - review/vercel-hardening-2026-10-02
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: cp .env.example .env
+      - run: npm run setup
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm audit --omit=dev --omit=optional --audit-level=high
+      - run: npm test
+      - run: npm run build

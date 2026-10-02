@@ -34,6 +34,30 @@ The default database is `prisma/dev.db`. Relative `DATABASE_URL` paths are resol
 
 `npm run setup` is repeatable and preserves student sessions. It updates the original demo content and fictional cohort. “New demo session” creates a separate learner; it does not delete previous database history. Clearing browser cookies loses access to that learner's demo session. Back up `prisma/dev.db` before manually resetting local data.
 
+## Deploy on Vercel
+
+The local `file:./dev.db` database is intentionally for laptop/demo use only. A Vercel deployment must use durable hosted storage because serverless filesystem state is not a safe place to keep student progress.
+
+The application supports hosted libSQL/Turso without changing the Prisma data model.
+
+1. Create a hosted libSQL/Turso database.
+2. Add these Vercel environment variables:
+   - `TURSO_DATABASE_URL`
+   - `TURSO_AUTH_TOKEN`
+3. From a trusted local checkout, place the same values in `.env` and run:
+
+```sh
+npm ci --ignore-scripts
+npm run setup:hosted
+```
+
+4. Redeploy Vercel.
+5. Check `/api/health`. A correctly configured hosted deployment returns HTTP 200 with `"database": "hosted-libsql"`.
+
+Do **not** run a production deployment with a `file:` database. When Vercel is detected with only local SQLite configured, the API deliberately returns HTTP 503 with a clear setup message rather than pretending progress is durable.
+
+Never commit database credentials. The hosted setup command applies the checked-in migrations and idempotent seed data before the deployment receives student traffic.
+
 ## Demonstrate the product
 
 1. Select **Find my skill gaps**. Enter a nickname and select **Enter student demo**. Data Analyst is the only MVP role.
@@ -58,11 +82,11 @@ For a short demonstration, start a diagnostic and show the first stakeholder exc
 - Sixteen original lessons with 64 practice problems, shared interactive/structured content, hints, explanations, retries, mastery and persisted progress.
 - Baseline/current readiness and reports, original-answer review, honest declines, print styling and example employer targets.
 - Public fictional college dashboard with anonymous sample aliases and explicit fixture labels.
-- Isolated cookie-based student demo sessions, input validation, server-owned grading and local database persistence.
+- Isolated cookie-based student demo sessions, input validation, server-owned grading and persisted demo progress; local SQLite is used on laptops and hosted libSQL can be used for deployment.
 
 ## Architecture
 
-Next.js App Router, React, TypeScript, Prisma 6, SQLite through `@prisma/adapter-libsql`, Zod, Lucide icons, Vitest, and Playwright. Original deterministic local content implements a provider interface, with a fallback wrapper for future optional providers. There is no active AI integration or “AI-powered” claim.
+Next.js App Router, React, TypeScript, Prisma 6, SQLite/libSQL through `@prisma/adapter-libsql`, Zod, Lucide icons, Vitest, and Playwright. Original deterministic local content implements a provider interface, with a fallback wrapper for future optional providers. There is no active AI integration or “AI-powered” claim.
 
 The engine-free Prisma runtime and bundled WASM generator avoid native Prisma binary downloads. `prisma/generate.ts` uses pinned Prisma internals; upgrade all Prisma packages together and recheck that script. Checked-in SQL migrations use Node's SQLite API, apply atomically and verify checksums. Add a new migration for schema changes; do not edit applied migrations. The relational model can be moved to PostgreSQL with a provider/adapter change and corresponding PostgreSQL migrations.
 
