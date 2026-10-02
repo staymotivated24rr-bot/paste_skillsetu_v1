@@ -1,0 +1,49 @@
+name: Production Smoke
+
+on:
+  push:
+    branches:
+      - ops/production-smoke-2026-10-03
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify production health
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://pasteskillsetuv1.vercel.app"
+          health="$(curl --retry 10 --retry-delay 3 --retry-all-errors -fsS "$base/api/health")"
+          echo "$health" | jq -e '.ok == true and .database == "hosted-postgresql"'
+
+      - name: Verify authentic Python assessment startup
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://pasteskillsetuv1.vercel.app"
+          cookie="$(mktemp)"
+          enter="$(curl --retry 5 --retry-delay 2 --retry-all-errors -fsS -c "$cookie"             -H 'content-type: application/json'             --data '{"action":"enter","name":"Production smoke verification","roleId":"python-developer"}'             "$base/api/demo")"
+          echo "$enter" | jq -e '.ok == true'
+
+          start="$(curl --retry 5 --retry-delay 2 --retry-all-errors -fsS -b "$cookie" -c "$cookie"             -H 'content-type: application/json'             --data '{"action":"start","kind":"diagnostic","roleId":"python-developer"}'             "$base/api/demo")"
+          attempt_id="$(echo "$start" | jq -r '.attemptId // empty')"
+          test -n "$attempt_id"
+
+          state="$(curl --retry 5 --retry-delay 2 --retry-all-errors -fsS -b "$cookie" "$base/api/demo")"
+          echo "$state" | jq -e --arg id "$attempt_id" '
+            .role.id == "python-developer" and
+            any(.attempts[]; .id == $id and .status == "in_progress" and
+              .bankId != null and
+              .assessmentVersion == "python-authentic-v2" and
+              (.bank.tasks | length) == 68)
+          '
+
+          bank="$(echo "$state" | jq -c --arg id "$attempt_id" '.attempts[] | select(.id == $id) | .bank')"
+          if grep -Eq '"(cases|rubric|correct|explanation|branch|followup)"' <<<"$bank"; then
+            echo "Private grading material leaked into public assessment state."
+            exit 1
+          fi
+
+          curl -fsS -b "$cookie" -H 'content-type: application/json'             --data '{"action":"new-session"}' "$base/api/demo" | jq -e '.ok == true'
