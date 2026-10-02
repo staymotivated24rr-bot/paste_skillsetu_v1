@@ -1,5 +1,7 @@
 # Status — 2026-10-02
 
+**Neon PostgreSQL production migration is in progress on PR #3.** The completed three-role SkillSetu feature set remains preserved. The migration branch switches Prisma persistence to PostgreSQL, runs CI against PostgreSQL 16, and updates Vercel deployment guards. Do not merge until a real Neon database and Vercel `DATABASE_URL` are configured and verified.
+
 **Complete three-role SkillSetu MVP implemented and verified** in `/workspace/paste_skillsetu_v1`, based on founder-selected `516c5f1` and preserving its Data Analyst implementation and deployment safeguards.
 
 ## Delivered
