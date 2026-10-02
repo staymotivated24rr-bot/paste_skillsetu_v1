@@ -2,7 +2,7 @@
 
 ## Runtime
 
-Next.js App Router monolith: one responsive client workspace, a small Node API, pure scoring functions, and Prisma with an engine-free SQLite/libSQL adapter (local files or configured hosted storage). The client never receives assessment keys or future stakeholder replies. Server route validation uses Zod and enforces session ownership, action ordering, valid choices, and same-host browser submissions.
+Next.js App Router monolith: one responsive client workspace, a small Node API, pure scoring functions, and Prisma backed by PostgreSQL. Neon is the hosted database target for Vercel. The client never receives assessment keys or future stakeholder replies. Server route validation uses Zod and enforces session ownership, action ordering, valid choices, and same-host browser submissions.
 
 Source map:
 
@@ -14,7 +14,7 @@ Source map:
 - `src/lib/provider.ts`: local hints/explanations plus an injectable provider with deterministic fallback on failure.
 - `src/app/api/demo/route.ts`: validated student actions and public fictional-cohort reads.
 - `src/components`: workspace, simulation runner, lessons, reports and cohort dashboard.
-- `prisma/schema.prisma`: schema; `prisma/migrations`: immutable checked-in SQL; `prisma/migrate.ts`: offline migration runner with checksums and atomic transactions.
+- `prisma/schema.prisma`: PostgreSQL schema; `prisma/migrations`: checked-in Prisma migrations applied with `prisma migrate deploy`.
 
 ## Workplace simulations
 
@@ -52,13 +52,13 @@ The same four practice items support both modes. At least three correct first re
 
 Role, SkillCategory, SkillNode, role requirements, assessment templates, scenarios, questions and weighted mappings describe content. User, attempts, answers, scores, learning paths, progress/practice answers and report snapshots describe evidence. College/Cohort/CohortMember holds explicitly fictional fixture summaries independently of student sessions. EmployerProfile and employer requirements demonstrate role comparison.
 
-Future employers and openings should reference requirement profiles; interviews/referrals should reference an opening, learner and evidence snapshot. Do not treat today's fictional profiles as jobs or referrals. PostgreSQL migration needs a provider/driver change and PostgreSQL migration SQL; scalar fields, IDs and relational model intentionally avoid SQLite-specific application queries. JSON is serialized into text for portable content payloads.
+Future employers and openings should reference requirement profiles; interviews/referrals should reference an opening, learner and evidence snapshot. Do not treat today's fictional profiles as jobs or referrals. The runtime now uses PostgreSQL; JSON-shaped authored payloads remain serialized into text to keep the current model simple.
 
 ## Security and operational limits
 
-Demo UUID cookies are HttpOnly and SameSite=Lax; ownership is checked on student operations. This is demo access, not verified identity, college authorization or enterprise authentication. The cohort is public fictional data. The application does not need email, real names, API keys, or secrets. React renders text without raw HTML. SQLite and content keys are server-side.
+Demo UUID cookies are HttpOnly and SameSite=Lax; ownership is checked on student operations. This is demo access, not verified identity, college authorization or enterprise authentication. The cohort is public fictional data. The application does not need email, real names, API keys, or secrets. React renders text without raw HTML. Database credentials and content keys remain server-side.
 
-Local files and fixed banks are appropriate for a demo, not production multi-tenant deployment. Before collecting real student data add real authentication, officer authorization, consent/retention policy, rate limiting, content versioning and assessment integrity controls. Seed content updates in place, so freeze/version items before a real longitudinal study. Preserve `.env` and database privacy. The app has no billing or external sending features.
+Fixed assessment banks and cookie demo sessions are appropriate for a prototype, not production multi-tenant deployment. Before collecting real student data add real authentication, officer authorization, consent/retention policy, rate limiting, content versioning and assessment integrity controls. Seed content updates in place, so freeze/version items before a real longitudinal study. Preserve `.env` and database privacy. The app has no billing or external sending features.
 
 ## Multi-role extension
 
@@ -70,4 +70,4 @@ User.selectedRoleId stores the chosen catalog role; cohort.roleId records fixtur
 
 The public college selector changes its cohort independently of student selection. Each cohort has 30 fictional aliases; role skill IDs prevent cross-track comparisons. Fixture changes are never described as actual student improvement.
 
-Hosted migration transactions now commit schema changes and checksum records together, so an interrupted migration cannot leave an unrecorded column addition. Local libSQL tests verify repeatability, checksum integrity and rollback; real hosted credentials and deployment remain an external verification requirement.
+PostgreSQL migrations are managed by Prisma migration history. CI runs PostgreSQL 16, applies migrations, seeds all tracks, and reruns integration tests against the relational model. Real Neon credentials and the production Vercel cutover are verified separately before merge.
