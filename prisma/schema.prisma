@@ -14,6 +14,7 @@ model User {
   attempts  AssessmentAttempt[]
   progress  LessonProgress[]
   paths     LearningPath[]
+  repairs   RepairRun[]
 }
 model Role {
   id           String @id
@@ -94,6 +95,13 @@ model QuestionSkillMapping {
   @@id([questionId, skillId])
 }
 model AssessmentAttempt {
+  bankId       String?
+  bank         AssessmentBank? @relation(fields: [bankId], references: [id])
+  assessmentVersion String @default("legacy-v1")
+  contentVersion String @default("legacy-v1")
+  roleIdSnapshot String?
+  skillSnapshot String?
+  evidence TaskEvidence[]
   id           String @id @default(uuid())
   userId       String
   assessmentId String
@@ -126,6 +134,7 @@ model SkillScore {
   skillId   String
   score     Int
   evidence  Int
+  quality   String?
   attempt   AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   skill     SkillNode @relation(fields: [skillId], references: [id])
   @@id([attemptId, skillId])
@@ -217,4 +226,57 @@ model EmployerSkillRequirement {
   profile   EmployerProfile @relation(fields: [profileId], references: [id])
   skill     SkillNode @relation(fields: [skillId], references: [id])
   @@id([profileId, skillId])
+}
+
+model AssessmentBank {
+  id String @id
+  roleId String
+  kind String
+  version String
+  contentVersion String
+  content String
+  digest String
+  attempts AssessmentAttempt[]
+}
+model TaskEvidence {
+  id String @id @default(uuid())
+  attemptId String
+  taskId String
+  payload String
+  score Float
+  response String
+  taskType String
+  scenario String
+  transfer Boolean
+  mappings String
+  bankId String
+  assessmentVersion String
+  answeredAt DateTime @default(now())
+  attempt AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  @@unique([attemptId, taskId])
+}
+model RepairRun {
+  id String @id @default(uuid())
+  userId String
+  skillId String
+  moduleVersion String
+  contentSnapshot String
+  mode String @default("interactive")
+  run Int @default(1)
+  status String @default("started")
+  answers RepairAnswer[]
+  user User @relation(fields: [userId], references: [id])
+  @@unique([userId, skillId])
+}
+model RepairAnswer {
+  id String @id @default(uuid())
+  repairId String
+  run Int
+  taskId String
+  payload String
+  score Float
+  first Boolean
+  response String
+  answeredAt DateTime @default(now())
+  repair RepairRun @relation(fields: [repairId], references: [id], onDelete: Cascade)
 }

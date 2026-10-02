@@ -1,3 +1,9 @@
+import {
+  evaluateAuthentic,
+  submitAuthentic,
+  repairAction,
+  repairTask,
+} from '@/lib/authentic/service';
 import { roleCatalog } from '@/lib/role-catalog';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -21,7 +27,50 @@ export const dynamic = 'force-dynamic';
 const cookieName = 'skillsetu-demo';
 const id = z.string().min(1).max(100);
 const roleId = id.refine((value) => roleCatalog.some((role) => role.id === value), 'Unknown role');
+function boundedOutput(value: unknown, depth = 0): boolean {
+  if (depth > 8) return false;
+  if (value === null || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value === 'string') return value.length <= 2000;
+  if (Array.isArray(value))
+    return value.length <= 100 && value.every((v) => boundedOutput(v, depth + 1));
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value);
+    return (
+      entries.length <= 100 &&
+      entries.every(([k, v]) => k.length <= 200 && boundedOutput(v, depth + 1))
+    );
+  }
+  return false;
+}
+const payload = z
+  .object({
+    selected: z.number().int().min(0).max(10).optional(),
+    text: z.string().max(4000).optional(),
+    order: z.array(id).max(20).optional(),
+    code: z.string().max(12000).optional(),
+    outputs: z
+      .array(z.unknown().refine((value) => boundedOutput(value), 'Output is too complex'))
+      .max(20)
+      .optional(),
+  })
+  .strict();
 const schema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('task'), attemptId: id, taskId: id, payload }),
+  z.object({ action: z.literal('evaluate'), attemptId: id, taskId: id, payload }),
+  z.object({
+    action: z.literal('repair'),
+    skillId: id,
+    mode: z.enum(['structured', 'interactive']),
+    restart: z.boolean().optional(),
+  }),
+  z.object({
+    action: z.literal('repair-task'),
+    skillId: id,
+    taskId: id,
+    payload: payload.optional(),
+    evaluate: z.boolean().optional(),
+  }),
   z.object({
     action: z.literal('enter'),
     name: z.string().trim().min(1).max(40),
@@ -87,6 +136,9 @@ export async function GET(req: NextRequest) {
         await cohortState(req.nextUrl.searchParams.get('roleId') ?? 'data-analyst'),
         { headers: { 'Cache-Control': 'no-store' } },
       );
+    const session = (await cookies()).get(cookieName)?.value;
+    if (!session && !req.nextUrl.searchParams.has('review'))
+      return NextResponse.json({ session: null }, { headers: { 'Cache-Control': 'no-store' } });
     const uid = await userId();
     const review = req.nextUrl.searchParams.get('review');
     return NextResponse.json(review ? await reviewAttempt(uid, review) : await getState(uid), {
@@ -120,7 +172,10 @@ export async function POST(req: NextRequest) {
     }
     if (Number(req.headers.get('content-length') ?? 0) > 16384)
       throw new AppError('Request is too large.', 413);
-    const body = schema.parse(await req.json());
+    const raw = await req.text();
+    if (new TextEncoder().encode(raw).length > 16384)
+      throw new AppError('Request is too large.', 413);
+    const body = schema.parse(JSON.parse(raw));
     if (body.action === 'enter') {
       const existing = (await cookies()).get(cookieName)?.value;
       if (
@@ -147,6 +202,21 @@ export async function POST(req: NextRequest) {
     }
     const uid = await userId();
     switch (body.action) {
+      case 'task':
+        return NextResponse.json(
+          await submitAuthentic(uid, body.attemptId, body.taskId, body.payload),
+        );
+      case 'evaluate':
+        return NextResponse.json(
+          await evaluateAuthentic(uid, body.attemptId, body.taskId, body.payload),
+        );
+      case 'repair':
+        await repairAction(uid, body.skillId, body.mode, body.restart);
+        return NextResponse.json({ ok: true });
+      case 'repair-task':
+        return NextResponse.json(
+          await repairTask(uid, body.skillId, body.taskId, body.payload, body.evaluate),
+        );
       case 'select-role':
         await selectRole(uid, body.roleId);
         return NextResponse.json({ ok: true });

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { pythonBanks } from '../src/lib/authentic/python-banks';
 import { db } from '../src/lib/db';
 import { tracks } from '../src/lib/tracks';
 
@@ -160,6 +162,26 @@ async function main() {
     },
     { timeout: 60000 },
   );
+  for (const bank of pythonBanks) {
+    const content = JSON.stringify(bank);
+    const digest = createHash('sha256').update(content).digest('hex');
+    const existing = await db.assessmentBank.findUnique({ where: { id: bank.id } });
+    if (existing && existing.digest !== digest)
+      throw new Error(`Immutable bank ${bank.id} changed; author a new content version and ID.`);
+    await db.assessmentBank.upsert({
+      where: { id: bank.id },
+      create: {
+        id: bank.id,
+        roleId: bank.roleId,
+        kind: bank.kind,
+        version: bank.version,
+        contentVersion: bank.contentVersion,
+        content,
+        digest,
+      },
+      update: {},
+    });
+  }
   console.log(
     'Seeded 3 roles, 51 skills, 18 workplace cases (144 actions), 51 lessons (204 practice items), and 90 fictional cohort members. Existing demo sessions preserved.',
   );

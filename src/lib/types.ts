@@ -1,3 +1,10 @@
+import type {
+  PublicBank,
+  EvidenceView,
+  EvidenceSummary,
+  PublicRepair,
+  RepairView,
+} from './authentic/types';
 export type RoleSummary = {
   id: string;
   name: string;
@@ -62,7 +69,7 @@ export type LessonSeed = {
   minutes: number;
   content: LessonContent;
 };
-export type Score = { skillId: string; score: number; evidence: number };
+export type Score = { skillId: string; score: number; evidence: number; quality?: EvidenceSummary };
 export type Gap = Skill & {
   current: number;
   gap: number;
@@ -78,6 +85,12 @@ export type PublicLesson = Omit<LessonSeed, 'content'> & {
 };
 export type AttemptView = {
   id: string;
+  bankId?: string | null;
+  assessmentVersion?: string;
+  contentVersion?: string;
+  skillSnapshot?: Skill[];
+  bank?: PublicBank;
+  evidence?: EvidenceView[];
   kind: string;
   status: string;
   startedAt: string;
@@ -100,6 +113,8 @@ export type ProgressView = {
   }[];
 };
 export type DemoState = {
+  repairs?: PublicRepair[];
+  repairProgress?: RepairView[];
   role: RoleSummary;
   roles: RoleSummary[];
   user: { id: string; name: string };

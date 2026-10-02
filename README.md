@@ -105,7 +105,7 @@ npm test
 npm run build
 ```
 
-Database integration tests create and seed an isolated temporary `skillsetu-vitest.db`. They never reset the application's database. Unit/integration coverage includes mapping/content coverage, weighted proficiency, completeness/duplicate guards, role/employer targets, prerequisite ordering/cycles, readiness and before/after, persisted progress/mastery/retries, session ownership, stakeholder replies, hidden keys, stored paths/reports, reassessment declines, and the fictional cohort.
+Database integration tests migrate and seed the PostgreSQL database selected by `TEST_DATABASE_URL`. Configure a separate test database; they never reset the application database. Unit/integration coverage includes mapping/content coverage, weighted proficiency, completeness/duplicate guards, role/employer targets, prerequisite ordering/cycles, readiness and before/after, persisted progress/mastery/retries, session ownership, stakeholder replies, hidden keys, stored paths/reports, reassessment declines, and the fictional cohort.
 
 Install a browser once if Playwright does not have one:
 
@@ -133,16 +133,44 @@ To use a different port, set `E2E_BASE_URL=http://127.0.0.1:3004` and `E2E_SERVE
 
 ## Prototype limitations
 
-- Each skill has limited mapped actions per bank. Indicators are coarse; the assessment is not scientifically validated and does not guarantee employability, interviews or placement.
-- Structured choices assess applied recognition and decisions, including clarification and communication. They do not yet assess free-form SQL authoring, unrestricted stakeholder conversation, or production coding ability. No live SQL/Python sandbox, avatar or voice.
-- Reassessment uses a different fixed bank from diagnostic; repeated reassessments reuse that alternate bank. Practice runs also reuse fixed items, so familiarity can affect scores. Future trials should add larger item banks, alternate forms, content versioning and independent evaluation.
-- Lessons are original short demo content, not a complete analytics or software-development curriculum. Four practice items are a prototype mastery check.
+- Legacy Data Analyst/Java banks have limited mapped actions; Python v2 provides four or more opportunities per skill. Indicators remain coarse; the assessment is not scientifically validated and does not guarantee employability, interviews or placement.
+- Data Analyst/Java structured choices assess recognition and decisions. Python v2 also executes small functions client-side and grades explanations/ordered verification. These tasks do not prove production coding ability. No live SQL server, unrestricted stakeholder conversation, avatar or voice.
+- Legacy roles reuse an alternate reassessment bank. Python v2 cycles three reassessment banks; repeated practice still reuses fixed module items, so familiarity can affect scores. Future trials should add larger item banks, alternate forms, content versioning and independent evaluation.
+- Legacy lessons remain short demo content with four practice items. Python v2 has six-stage repair modules; neither is a complete professional curriculum.
 - Cookie demo access is not production authentication. The placement dashboard is public fictional data; no real college authorization, multi-tenancy, billing, recruiter marketplace or external hiring integration is implemented.
 - A single Next.js/PostgreSQL monolith and serialized content payloads suit the current prototype. Real deployments need identity/access control, content integrity, privacy/consent/retention decisions and operational hardening.
-- Cohort metrics are explicitly fabricated fixtures to demonstrate the dashboard. Student results are always computed from actual submitted choices.
+- Cohort metrics are explicitly fabricated fixtures to demonstrate the dashboard. Student results are computed from submitted assessment evidence; browser code transcripts remain forgeable prototype evidence.
 
 No unresolved founder decision currently blocks this MVP.
 
 ## Smallest next validation
 
 Pilot a chosen role with 20–30 engineering students: collect feedback on whether the applied tasks reveal credible gaps, let students repair identified gaps, then reassess. Record baseline/current skill evidence, completion and time spent. Ask one placement officer and one role-appropriate employer reviewer to critique the tasks and rubrics. Include independently scored fresh tasks to distinguish skill transfer from familiarity with multiple-choice items. Treat findings as early validation, not proven placement outcomes.
+
+## Authentic Python preparation (v2)
+
+Python Developer now uses authored decision, code edit, bug fix, short-answer, ordered-step and transfer tasks. Two baseline variants and three reassessment variants each provide 68 opportunities across four work contexts. Plan roughly 90–120 minutes; submitted responses and local coding drafts resume after refresh. Data Analyst/Java content and all legacy history remain intact.
+
+Python runs in a lazy browser worker using pinned, self-hosted Pyodide. Setup/build prepares the runtime assets automatically. `Run Python` evaluates actual outputs; syntax/runtime failures and a five-second execution timeout permit retry. No learner code runs on the application server. Expected-output keys and solutions are excluded from public APIs, but browser evidence can be inspected or forged: this is a preparation prototype, not high-stakes anti-cheating certification.
+
+Each skill displays weighted assessed credit, target, latest-bank opportunities, cumulative diverse evidence, transfer and a descriptive evidence-strength label. Practice mastery adds no readiness points. Reassessment can improve, stay flat or decline; the report explains actual skill changes and permits selecting historical reports. Python repair modules add guided/independent/harder/workplace/verification/transfer tasks and a prerequisite-aware seven-day suggested plan. Short-answer grading uses deterministic concept rubrics, not AI.
+
+The application uses a dark-first semantic design system; reports print using a light paper layout. All cohorts stay clearly fictional. Mobile code tasks show larger-screen guidance and keep drafts; no task is silently skipped.
+
+### Isolated tests
+
+Create a separate PostgreSQL test database, copy `.env.test.example` to `.env.test`, and configure `TEST_DATABASE_URL` there. Tests no longer inherit the application's `DATABASE_URL`. CI configures both databases explicitly for its disposable PostgreSQL service.
+
+```sh
+npm run setup
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npx playwright install chromium
+E2E_BASE_URL=http://127.0.0.1:3004 E2E_SERVER_COMMAND='npm run start -- --port 3004' npm run test:e2e
+```
+
+For cloud development, source `/workspace/skillsetu-runtime/env.sh` and restore PostgreSQL with `/workspace/skillsetu-runtime/start-postgres.sh`. Socket/network commands need executor network access enabled. Use `localhost` for development browser checks and a fresh port for production tests.
+
+See `docs/AUTHENTIC_READINESS_SPEC.md`, `docs/DECISIONS.md` and `docs/ARCHITECTURE.md` for versioning, migration safety, rubric/security limitations and shared versus Python-only content. The first two production migrations and all legacy banks remain unchanged. New banks are immutable: changing content requires a new bank ID/content version. No database reset or automatic merge is needed.

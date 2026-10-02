@@ -15,8 +15,8 @@ export const roleCatalog: RoleSummary[] = [
     id: 'python-developer',
     name: 'Python Developer',
     description: 'Build dependable junior Python services and automation.',
-    work: 'Debug order processing, integrate APIs, and refactor scripts.',
-    duration: '25–35 minutes',
+    work: 'Implement contracts, repair code, explain tradeoffs and verify transfer in four work contexts.',
+    duration: '90–120 minutes; pause and resume anytime',
     categories: [
       'Python fundamentals',
       'Data structures',

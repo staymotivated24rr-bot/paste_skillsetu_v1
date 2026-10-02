@@ -1,4 +1,5 @@
 'use client';
+import { explainChange } from '@/lib/authentic/planning';
 import { useState } from 'react';
 import {
   ArrowDownRight,
@@ -34,7 +35,8 @@ export function Results({
 }) {
   const completed = state.attempts.filter((a) => a.status === 'complete');
   const original = completed.find((a) => a.kind === 'diagnostic');
-  const latest = completed.at(-1);
+  const [selectedReport, setSelectedReport] = useState('');
+  const latest = completed.find((a) => a.id === selectedReport) ?? completed.at(-1);
   const [review, setReview] = useState<
     {
       questionId: string;
@@ -54,17 +56,25 @@ export function Results({
         text="Complete three workplace cases to see your skill scores, prioritized gaps, and prototype readiness report."
       />
     );
+  const reportSkills = latest.skillSnapshot ?? state.skills;
   const scores = latest.scores;
-  const gaps = planGaps(scores, state.skills);
-  const current = readiness(scores, state.skills);
-  const baseline = readiness(original.scores, state.skills);
+  const gaps = planGaps(scores, reportSkills);
+  const current = readiness(scores, reportSkills);
+  const baseline =
+    original.score ?? readiness(original.scores, original.skillSnapshot ?? reportSkills);
   const change = current - baseline;
-  const comparison = compareScores(original.scores, scores, state.skills);
+  const comparison = compareScores(original.scores, scores, reportSkills);
   const improved = comparison.filter((c) => c.change > 0);
   const declined = comparison.filter((c) => c.change < 0);
   const strengths = [...comparison].sort((a, b) => b.after - a.after).slice(0, 3);
-  const modules = state.progress.filter((p) => p.status === 'mastered');
-  const label = readinessLabel(scores, state.skills);
+  const modules = [
+    ...state.progress.filter((p) => p.status === 'mastered'),
+    ...(state.repairProgress
+      ?.filter((p) => p.status === 'mastered')
+      .map((p) => ({ lessonId: 'lesson-' + p.skillId })) ?? []),
+  ];
+  const explanation = explainChange(original.scores, scores, reportSkills);
+  const label = readinessLabel(scores, reportSkills);
   const reassessed = latest.kind === 'reassessment';
   async function toggleReview() {
     if (!showReview && !review.length) {
@@ -94,12 +104,39 @@ export function Results({
           </p>
         </div>
         {report && (
+          <label className="role-switch">
+            <span>Assessment report</span>
+            <select
+              aria-label="Assessment report"
+              value={latest.id}
+              onChange={(e) => {
+                setSelectedReport(e.target.value);
+                setReview([]);
+                setShowReview(false);
+              }}
+            >
+              {completed.map((a, i) => (
+                <option key={a.id} value={a.id}>
+                  {i + 1}. {a.kind} · {a.bankId ?? 'legacy-v1'} · {a.score}%
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {report && (
           <button className="btn btn-outline no-print" onClick={() => window.print()}>
             <Printer size={16} />
             Print report
           </button>
         )}
       </div>
+      {latest.bankId && (
+        <div className="assessment-provenance">
+          <span>Bank: {latest.bankId}</span>
+          <span>Assessment: {latest.assessmentVersion}</span>
+          <span>Content: {latest.contentVersion}</span>
+        </div>
+      )}
       <Steps active={report ? 3 : reassessed ? 2 : 1} />
       <div className="report-hero">
         <div>
@@ -115,7 +152,7 @@ export function Results({
               {reassessed ? 'Reassessment evidence' : 'Diagnostic evidence'}
             </span>
             <span className="tag">{latest.answers.length} scored actions</span>
-            <span className="tag">{state.skills.length} measured skills</span>
+            <span className="tag">{reportSkills.length} measured skills</span>
           </div>
         </div>
         <div
@@ -214,7 +251,7 @@ export function Results({
           <span className="muted small">Markers show role targets</span>
         </div>
         <SkillTable
-          skills={state.skills}
+          skills={reportSkills}
           scores={scores}
           before={reassessed ? original.scores : undefined}
         />
@@ -225,6 +262,25 @@ export function Results({
           action affects every skill mapped to it.
         </p>
       </section>
+      {reassessed && (
+        <section className="card score-explanation">
+          <span className="eyebrow">UNDERSTAND THE CHANGE</span>
+          <h2>Why did my result change?</h2>
+          <p>{explanation.text}</p>
+          <div className="tags">
+            <span className="tag">{explanation.improved.length} improved</span>
+            <span className="tag">{explanation.declined.length} declining</span>
+            <span className="tag">{explanation.unchanged.length} unchanged</span>
+            <span className="tag">{explanation.newGaps.length} newly discovered gaps</span>
+          </div>
+          <p className="small">
+            Current gaps: {gaps.length}; baseline gaps:{' '}
+            {planGaps(original.scores, original.skillSnapshot ?? reportSkills).length}.{' '}
+            {explanation.newlyMeasured.length} skills received more opportunities than at baseline.
+            Practice has added no points to either assessment.
+          </p>
+        </section>
+      )}
       {reassessed && (
         <div className="results-columns">
           <section className="card">
@@ -286,7 +342,7 @@ export function Results({
                   <small className="muted">
                     Prerequisites:{' '}
                     {g.blockedBy
-                      .map((id) => state.skills.find((s) => s.id === id)?.name)
+                      .map((id) => reportSkills.find((s) => s.id === id)?.name)
                       .join(', ')}
                   </small>
                 )}
@@ -320,7 +376,7 @@ export function Results({
               </span>
             </div>
             <SkillTable
-              skills={state.skills}
+              skills={reportSkills}
               scores={scores}
               employer={state.employer.requirements}
             />
@@ -346,6 +402,32 @@ export function Results({
           </section>
         </>
       )}
+      <section className="card">
+        <h2>What should I do next?</h2>
+        <ol>
+          {gaps.slice(0, 3).map((g) => (
+            <li key={g.id}>
+              Repair {g.name.toLowerCase()} from {g.current}% toward its {g.target}% role target;
+              verify with an independent transfer task.
+            </li>
+          ))}
+          <li>
+            {modules.length
+              ? 'Verify mastered modules in a fresh assessment bank.'
+              : 'Complete a guided and independent repair task before reassessment.'}
+          </li>
+          <li>
+            Explain one real project decision and its limitations to a peer or placement mentor.
+          </li>
+        </ol>
+        <h3>What this result does not prove</h3>
+        <p>
+          It does not guarantee interview performance or hiring, prove production-level engineering
+          ability, or establish a scientifically validated proficiency score. Limited-evidence
+          signals may change with further evidence. Browser coding results are inspectable and may
+          be manipulated; deterministic concept matching can miss valid explanations.
+        </p>
+      </section>
       <section className="card no-print">
         <div className="section-title">
           <h2>

@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
 
+if (process.env.VERCEL) {
+  console.log(
+    'Hosted build: migrations and seed are separate trusted operations; no database writes during build.',
+  );
+  process.exit(0);
+}
+
 const url = process.env.DATABASE_URL?.trim();
 
 if (!url) {

@@ -1,5 +1,25 @@
 # Status — 2026-10-02
 
+## Current: authentic Python readiness upgrade
+
+Implementation is on `feat/python-authentic-readiness`, based on the merged Neon/PostgreSQL main (`a257e9c`). Python has five versioned 68-task banks, safe browser execution, six task types, evidence strength, independent repair mastery, seven-day planning and historical evidence reports. Shared dark UI and fictional cohort analytics cover all three roles. Data Analyst/Java content and Python legacy histories are retained. Full details: [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md).
+
+Prisma generation, all three additive migrations, idempotent seed, typecheck, lint, 70 unit/integration tests in eight files, normal production build and `VERCEL=1` build pass. Production dependency audit reports zero vulnerabilities. All ten production Chromium journeys pass in one complete run (9.3 minutes), including all 130 coding contracts, actual five-second UI timeout/recovery, normal-console checks, API security guards, all three roles, histories, learning modes, reports/PDF and responsive layouts. All eight requested cloud environment checks are ready.
+
+The measured Python journey is 57% → 69% with 11 improved, four declined, two unchanged skills and two new gaps. Practice leaves assessed readiness unchanged. Local production health returns 200. No production migration/reset, merge or production deployment has occurred; Vercel-mode builds explicitly skip database writes. Recorded public production is the existing main build, not this upgrade.
+
+Below are historical verification notes. The old migration-in-progress and SQLite/libSQL descriptions are superseded by the current merged PostgreSQL architecture.
+
+## Historical cloud environment and MVP verification
+
+## Cloud environment verification — 2026-10-02
+
+All eight requested environment checks pass on the PostgreSQL branch: Prisma 6.19 client generation, both PostgreSQL migrations, idempotent seed, TypeScript, ESLint, 39 unit/integration tests across five files, Next.js production build, and all six Chromium production-browser journeys. A separate development-server Chromium smoke check also passed: visible home-page controls, no reported browser errors or framework overlay, and HTTP 200 from `/api/health`.
+
+The runtime uses Node 24.19.0, PostgreSQL 17.11, and system Chromium 151. Commands that open sockets or download dependencies need executor network access enabled. Local databases are `skillsetu` and isolated `skillsetu_test`. Source `/workspace/skillsetu-runtime/env.sh` before development commands; run `bash /workspace/skillsetu-runtime/start-postgres.sh` after environment restarts. `bash /workspace/skillsetu-runtime/verify.sh` repeats the complete command suite against a fresh production server on port 3004. The existing cloud `.env` remains ignored.
+
+The browser role-switch check now waits for the selector to become enabled and display the saved role before reading API state; this fixes a test synchronization race exposed by PostgreSQL timing. Product features were not changed. Playwright output is in ignored `playwright-report/` and `test-results/`; the development smoke screenshot is `/workspace/skillsetu-runtime/dev-browser-check.png`. This verifies cloud-local development and does not establish live Neon/Vercel readiness. Older verification entries below describe the previous SQLite/libSQL implementation.
+
 **Neon PostgreSQL production migration is in progress on PR #3.** The completed three-role SkillSetu feature set remains preserved. The migration branch switches Prisma persistence to PostgreSQL, runs CI against PostgreSQL 16, and updates Vercel deployment guards. Do not merge until a real Neon database and Vercel `DATABASE_URL` are configured and verified.
 
 **Complete three-role SkillSetu MVP implemented and verified** in `/workspace/paste_skillsetu_v1`, based on founder-selected `516c5f1` and preserving its Data Analyst implementation and deployment safeguards.

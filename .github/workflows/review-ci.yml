@@ -29,6 +29,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/skillsetu_test?schema=public
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/skillsetu_test?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,3 +45,17 @@ jobs:
       - run: npm run lint
       - run: npm audit --omit=dev --omit=optional --audit-level=high
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Production browser acceptance and regression journeys
+        run: npm run test:e2e
+        env:
+          CI: '1'
+          E2E_BASE_URL: http://127.0.0.1:3004
+          E2E_SERVER_COMMAND: npm run start -- --port 3004
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            playwright-report/
+            test-results/
