@@ -1,4 +1,5 @@
 import { ArrowUpRight, Check, ChevronRight } from 'lucide-react';
+import { strength } from '@/lib/authentic/grading';
 import type { Skill, Score } from '@/lib/types';
 export function Meter({
   value,
@@ -62,11 +63,20 @@ export function SkillTable({
             <th>Current</th>
             <th>Target</th>
             <th>{employer ? 'Requirement match' : 'Evidence'}</th>
+            {!employer && <th>Evidence strength / state</th>}
           </tr>
         </thead>
         <tbody>
           {skills.map((s) => {
             const score = scores.find((x) => x.skillId === s.id);
+            const quality =
+              score?.quality ??
+              strength(score?.evidence ?? 0, {
+                types: ['decision'],
+                scenarios: [],
+                transfer: 0,
+                independent: 0,
+              });
             const target = employer?.find((r) => r.skillId === s.id)?.target ?? s.target;
             return (
               <tr key={s.id}>
@@ -87,9 +97,38 @@ export function SkillTable({
                       {(score?.score ?? 0) >= target ? 'Meets' : 'Below'}
                     </span>
                   ) : (
-                    <span className="muted">{score?.evidence ?? 0} actions</span>
+                    <span className="evidence-detail">
+                      {score?.evidence ?? 0} opportunities
+                      {quality.cumulativeCount !== undefined && (
+                        <small>
+                          {quality.cumulativeCount} unique opportunities across completed banks
+                        </small>
+                      )}
+                      <small>{quality.types.join(', ').replaceAll('-', ' ')}</small>
+                      {quality.transfer > 0 && <small>Transfer evidence: {quality.transfer}</small>}
+                    </span>
                   )}
                 </td>
+                {!employer && (
+                  <td>
+                    <span className="badge">{quality.strength}</span>
+                    <small className="evidence-detail">
+                      {quality.strength === 'Limited evidence'
+                        ? 'Tentative signal'
+                        : (score?.score ?? 0) >= target
+                          ? quality.strength === 'Stronger evidence'
+                            ? 'Strong'
+                            : 'Developing'
+                          : (score?.score ?? 0) < target - 20
+                            ? 'Priority gap'
+                            : 'Developing'}
+                    </small>
+                    <details>
+                      <summary>Why this label?</summary>
+                      <p>{quality.reason}</p>
+                    </details>
+                  </td>
+                )}
               </tr>
             );
           })}

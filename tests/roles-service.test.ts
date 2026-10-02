@@ -12,9 +12,31 @@ import {
   practiceAction,
   reviewAttempt,
   selectRole,
-  startAssessment,
+  startAssessment as startCurrentAssessment,
 } from '../src/lib/service';
 import { compareScores, meetsRequirements } from '../src/lib/engine';
+// Explicit legacy fixtures keep the original Python histories under regression coverage.
+async function startAssessment(
+  userId: string,
+  kind: 'diagnostic' | 'reassessment',
+  roleId?: string,
+) {
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+  if (user.selectedRoleId !== 'python-developer')
+    return startCurrentAssessment(userId, kind, roleId);
+  if (roleId && roleId !== user.selectedRoleId) return startCurrentAssessment(userId, kind, roleId);
+  const baseline = await db.assessmentAttempt.findFirst({
+    where: { userId, assessmentId: tracks[1].role.assessmentIds.diagnostic, status: 'complete' },
+  });
+  if ((kind === 'reassessment' && !baseline) || (kind === 'diagnostic' && baseline))
+    return startCurrentAssessment(userId, kind, roleId);
+  const assessmentId = tracks[1].role.assessmentIds[kind];
+  const existing = await db.assessmentAttempt.findFirst({
+    where: { userId, assessmentId, status: 'in_progress' },
+  });
+  if (existing) return existing.id;
+  return (await db.assessmentAttempt.create({ data: { userId, assessmentId } })).id;
+}
 let uid = '';
 beforeAll(async () => {
   execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {

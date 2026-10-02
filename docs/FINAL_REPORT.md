@@ -1,3 +1,5 @@
+> Historical three-role MVP report. The current implementation and verification are documented in [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md).
+
 # Multi-role implementation report — 2026-10-02
 
 ## 1. What was built

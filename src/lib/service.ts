@@ -3,14 +3,12 @@ import { db } from './db';
 import { mastery, planGaps, readiness, readinessLabel, scoreAssessment } from './engine';
 import { provider } from './provider';
 import type { DemoState, Item, LessonContent, Option, Score, Skill, CohortView } from './types';
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-  ) {
-    super(message);
-  }
-}
+import { AppError } from './errors';
+export { AppError } from './errors';
+import { ensurePublishedPythonBanks, publicBank, publicRepair } from './authentic/service';
+import { pythonRepairs, pythonBanks } from './authentic/python-banks';
+import { scoreEvidence, strength } from './authentic/grading';
+import type { AssessmentBank, EvidenceSummary, RepairModule } from './authentic/types';
 export async function getSkills(roleId = 'data-analyst'): Promise<Skill[]> {
   checkedRole(roleId);
   const rows = await db.roleSkillRequirement.findMany({
@@ -66,6 +64,8 @@ export async function getState(userId: string): Promise<DemoState> {
       orderBy: { startedAt: 'asc' },
       include: {
         assessment: true,
+        bank: true,
+        evidence: { orderBy: { answeredAt: 'asc' } },
         answers: {
           orderBy: [
             { question: { scenario: { position: 'asc' } } },
@@ -108,7 +108,41 @@ export async function getState(userId: string): Promise<DemoState> {
       })),
     ]),
   ) as DemoState['scenarios'];
+  const repairRuns =
+    roleId === 'python-developer'
+      ? await db.repairRun.findMany({
+          where: { userId },
+          include: { answers: { orderBy: { answeredAt: 'asc' } } },
+        })
+      : [];
   return {
+    repairs: roleId === 'python-developer' ? pythonRepairs.map(publicRepair) : [],
+    repairProgress: repairRuns.map((r) => {
+      const repairModule = JSON.parse(r.contentSnapshot) as RepairModule;
+      return {
+        id: r.id,
+        skillId: r.skillId,
+        status: r.status,
+        mode: r.mode,
+        run: r.run,
+        module: publicRepair(repairModule),
+        answers: r.answers
+          .filter((a) => a.run === r.run)
+          .map((a) => {
+            const task = repairModule.tasks.find((t) => t.id === a.taskId)!;
+            return {
+              taskId: a.taskId,
+              payload: JSON.parse(a.payload),
+              score: a.score,
+              response: a.response,
+              type: task.type,
+              scenario: task.scenario,
+              transfer: task.transfer,
+              first: a.first,
+            };
+          }),
+      };
+    }),
     role,
     roles: roleCatalog,
     user,
@@ -116,17 +150,38 @@ export async function getState(userId: string): Promise<DemoState> {
     scenarios,
     attempts: attempts.map((a) => ({
       id: a.id,
+      bankId: a.bankId,
+      assessmentVersion: a.assessmentVersion,
+      contentVersion: a.contentVersion,
+      skillSnapshot: a.skillSnapshot ? JSON.parse(a.skillSnapshot) : undefined,
+      bank: a.bank ? publicBank(JSON.parse(a.bank.content), a.evidence) : undefined,
+      evidence: a.evidence.map((e) => ({
+        taskId: e.taskId,
+        payload: JSON.parse(e.payload),
+        score: e.score,
+        response: e.response,
+        type: e.taskType as import('./authentic/types').TaskType,
+        scenario: e.scenario,
+        transfer: e.transfer,
+      })),
       kind: a.assessment.kind,
       status: a.status,
       startedAt: a.startedAt.toISOString(),
       completedAt: a.completedAt?.toISOString() ?? null,
       score: a.score,
-      answers: a.answers.map((x) => ({
-        questionId: x.questionId,
-        selected: x.selected,
-        response: (JSON.parse(x.question.options) as Option[])[x.selected].response,
+      answers: a.bank
+        ? a.evidence.map((e) => ({ questionId: e.taskId, selected: 0, response: e.response }))
+        : a.answers.map((x) => ({
+            questionId: x.questionId,
+            selected: x.selected,
+            response: (JSON.parse(x.question.options) as Option[])[x.selected].response,
+          })),
+      scores: a.scores.map((s) => ({
+        skillId: s.skillId,
+        score: s.score,
+        evidence: s.evidence,
+        quality: s.quality ? (JSON.parse(s.quality) as EvidenceSummary) : undefined,
       })),
-      scores: a.scores.map((s) => ({ skillId: s.skillId, score: s.score, evidence: s.evidence })),
     })),
     lessons: lessons.map((l) => {
       const content = JSON.parse(l.content) as LessonContent;
@@ -169,10 +224,16 @@ export async function startAssessment(
   expectedRoleId?: string,
 ) {
   const role = await activeRole(userId);
+  if (role.id === 'python-developer') await ensurePublishedPythonBanks();
   if (expectedRoleId && role.id !== expectedRoleId)
     throw new AppError('Your target role changed. Refresh before starting an assessment.', 409);
   const assessmentId = role.assessmentIds[kind];
+  const skillSnapshot = JSON.stringify(await getSkills(role.id));
   return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+    const currentUser = await tx.user.findUniqueOrThrow({ where: { id: userId } });
+    if (currentUser.selectedRoleId !== role.id)
+      throw new AppError('Your target role changed. Refresh before starting.', 409);
     const existing = await tx.assessmentAttempt.findFirst({
       where: { userId, assessmentId, status: 'in_progress' },
     });
@@ -186,7 +247,40 @@ export async function startAssessment(
       throw new AppError(
         'Your baseline is already recorded. Use reassessment to verify current skills.',
       );
-    return (await tx.assessmentAttempt.create({ data: { userId, assessmentId } })).id;
+    const banks = await tx.assessmentBank.findMany({
+      where: {
+        roleId: role.id,
+        kind,
+        ...(role.id === 'python-developer' ? { id: { in: pythonBanks.map((b) => b.id) } } : {}),
+      },
+      orderBy: { id: 'asc' },
+    });
+    const previous = await tx.assessmentAttempt.findFirst({
+      where: { userId, assessmentId, bankId: { not: null } },
+      orderBy: { startedAt: 'desc' },
+    });
+    // Stable learner-specific starting variant, then cycle through every published bank.
+    const offset = [...userId].reduce((n, c) => n + c.charCodeAt(0), 0);
+    const bank = banks.length
+      ? banks[
+          previous
+            ? (banks.findIndex((b) => b.id === previous.bankId) + 1) % banks.length
+            : offset % banks.length
+        ]
+      : undefined;
+    return (
+      await tx.assessmentAttempt.create({
+        data: {
+          userId,
+          assessmentId,
+          roleIdSnapshot: role.id,
+          skillSnapshot,
+          bankId: bank?.id,
+          assessmentVersion: bank?.version ?? 'legacy-v1',
+          contentVersion: bank?.contentVersion ?? 'legacy-v1',
+        },
+      })
+    ).id;
   });
 }
 export async function answerAssessment(
@@ -200,10 +294,13 @@ export async function answerAssessment(
     select: { selectedRoleId: true },
   });
   return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "AssessmentAttempt" WHERE "id" = ${attemptId} FOR UPDATE`;
     const attempt = await tx.assessmentAttempt.findFirst({
       where: { id: attemptId, userId },
       include: {
         answers: true,
+        bank: true,
+        evidence: true,
         assessment: {
           include: {
             scenarios: {
@@ -220,6 +317,7 @@ export async function answerAssessment(
         'This assessment belongs to another target role. Switch back to continue.',
         409,
       );
+    if (attempt.bankId) throw new AppError('Use the versioned task endpoint for this assessment.');
     if (attempt.status !== 'in_progress')
       throw new AppError('This assessment has already been submitted.', 409);
     const questions = attempt.assessment.scenarios.flatMap((s) => s.questions);
@@ -250,10 +348,13 @@ export async function completeAssessment(userId: string, attemptId: string) {
   const role = await activeRole(userId);
   const skills = await getSkills(role.id);
   return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "AssessmentAttempt" WHERE "id" = ${attemptId} FOR UPDATE`;
     const attempt = await tx.assessmentAttempt.findFirst({
       where: { id: attemptId, userId },
       include: {
         answers: true,
+        bank: true,
+        evidence: true,
         assessment: {
           include: { scenarios: { include: { questions: { include: { mappings: true } } } } },
         },
@@ -266,6 +367,62 @@ export async function completeAssessment(userId: string, attemptId: string) {
         409,
       );
     if (attempt.status === 'complete') return attemptId;
+    if (attempt.bank) {
+      const bank = JSON.parse(attempt.bank.content) as AssessmentBank;
+      if (attempt.evidence.length !== bank.tasks.length)
+        throw new AppError('Finish all workplace tasks before submitting.');
+      const snapshot = attempt.skillSnapshot
+        ? (JSON.parse(attempt.skillSnapshot) as Skill[])
+        : skills;
+      const scores = scoreEvidence(bank.tasks, attempt.evidence, snapshot);
+      const earlier = await tx.taskEvidence.findMany({
+        where: {
+          attempt: { userId, status: 'complete', assessment: { roleId: role.id } },
+          taskId: { notIn: attempt.evidence.map((e) => e.taskId) },
+        },
+      });
+      for (const score of scores) {
+        const all = [...earlier, ...attempt.evidence].filter((e) =>
+          (JSON.parse(e.mappings) as { skillId: string }[]).some(
+            (m) => m.skillId === score.skillId,
+          ),
+        );
+        const unique = [...new Map(all.map((e) => [e.taskId, e])).values()];
+        score.quality = {
+          ...strength(unique.length, {
+            types: [
+              ...new Set(unique.map((e) => e.taskType)),
+            ] as import('./authentic/types').TaskType[],
+            scenarios: [...new Set(unique.map((e) => e.scenario))],
+            transfer: unique.filter((e) => e.transfer).length,
+            independent: unique.filter((e) => e.taskType !== 'decision').length,
+          }),
+          cumulativeCount: unique.length,
+        };
+      }
+      await tx.skillScore.createMany({
+        data: scores.map(({ quality, ...score }) => ({
+          ...score,
+          attemptId,
+          quality: JSON.stringify(quality),
+        })),
+      });
+      await tx.assessmentAttempt.update({
+        where: { id: attemptId },
+        data: { status: 'complete', completedAt: new Date(), score: readiness(scores, snapshot) },
+      });
+      await tx.learningPath.create({
+        data: {
+          userId,
+          attemptId,
+          skillIds: JSON.stringify(planGaps(scores, snapshot).map((g) => g.id)),
+        },
+      });
+      await tx.readinessReport.create({
+        data: { attemptId, indicator: readinessLabel(scores, snapshot) },
+      });
+      return attemptId;
+    }
     const questions = attempt.assessment.scenarios.flatMap((s) => s.questions);
     if (attempt.answers.length !== questions.length)
       throw new AppError('Finish all simulation actions before submitting.');
@@ -275,7 +432,13 @@ export async function completeAssessment(userId: string, attemptId: string) {
       skills: q.mappings.map((m) => ({ skillId: m.skillId, weight: m.weight })),
     }));
     const scores = scoreAssessment(items, attempt.answers, skills);
-    await tx.skillScore.createMany({ data: scores.map((s) => ({ ...s, attemptId })) });
+    await tx.skillScore.createMany({
+      data: scores.map(({ quality, ...score }) => ({
+        ...score,
+        attemptId,
+        quality: quality ? JSON.stringify(quality) : undefined,
+      })),
+    });
     await tx.assessmentAttempt.update({
       where: { id: attemptId },
       data: { status: 'complete', completedAt: new Date(), score: readiness(scores, skills) },
@@ -393,6 +556,8 @@ export async function reviewAttempt(userId: string, attemptId: string) {
   const attempt = await db.assessmentAttempt.findFirst({
     where: { id: attemptId, userId, status: 'complete', assessment: { roleId: role.id } },
     include: {
+      bank: true,
+      evidence: { orderBy: { answeredAt: 'asc' } },
       answers: {
         orderBy: [
           { question: { scenario: { position: 'asc' } } },
@@ -403,6 +568,23 @@ export async function reviewAttempt(userId: string, attemptId: string) {
     },
   });
   if (!attempt) throw new AppError('Submit the assessment before reviewing answers.', 404);
+  if (attempt.bank) {
+    const bank = JSON.parse(attempt.bank.content) as AssessmentBank;
+    return attempt.evidence.map((e) => {
+      const task = bank.tasks.find((t) => t.id === e.taskId)!;
+      return {
+        questionId: e.taskId,
+        prompt: task.prompt,
+        scenario: bank.scenarios.find((s) => s.id === task.scenario)!.title,
+        selected: task.cases
+          ? 'Submitted Python implementation'
+          : JSON.stringify(JSON.parse(e.payload)),
+        correct: e.score >= 0.75,
+        explanation: task.explanation,
+        answeredAt: e.answeredAt.toISOString(),
+      };
+    });
+  }
   return attempt.answers.map((a) => ({
     questionId: a.questionId,
     prompt: a.question.prompt,

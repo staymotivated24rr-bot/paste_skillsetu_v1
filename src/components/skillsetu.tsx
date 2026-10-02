@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -24,6 +24,8 @@ import {
 import { roleCatalog } from '@/lib/role-catalog';
 import type { DemoState } from '@/lib/types';
 import { planGaps, readiness, readinessLabel } from '@/lib/engine';
+import { RepairLearning } from './repair-learning';
+import { AuthenticSimulation } from './authentic-simulation';
 import { Cohort } from './cohort';
 import { Learning } from './learning';
 import { Results } from './results';
@@ -50,6 +52,45 @@ export function SkillSetu() {
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!mobileMenu) return;
+    const panel = document.getElementById('product-navigation');
+    const controls = () =>
+      Array.from(
+        panel?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), select:not(:disabled), a[href]',
+        ) ?? [],
+      ).filter((el) => el.getClientRects().length > 0);
+    controls()[0]?.focus();
+    function trap(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setMobileMenu(false);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const list = controls();
+        const first = list[0],
+          last = list.at(-1);
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    }
+    const previous = document.body.style.overflow;
+    const trigger = menuTrigger.current;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', trap);
+    return () => {
+      document.removeEventListener('keydown', trap);
+      document.body.style.overflow = previous;
+      trigger?.focus();
+    };
+  }, [mobileMenu]);
   const refresh = useCallback(async () => {
     const r = await fetch('/api/demo');
     if (r.status === 401) {
@@ -58,13 +99,15 @@ export function SkillSetu() {
     }
     const d = await r.json();
     if (!r.ok) throw new Error(d.error ?? 'Could not load your demo.');
-    setState(d);
-    return d as DemoState;
+    setState(d.session === null ? null : d);
+    return d.session === null ? null : (d as DemoState);
   }, []);
   useEffect(() => {
     let live = true;
     const sync = () => {
-      const v = window.location.hash.slice(1) as View;
+      const [hashView, hashLesson] = window.location.hash.slice(1).split('/');
+      const v = hashView as View;
+      if (v === 'learning' && hashLesson) setLessonId(decodeURIComponent(hashLesson));
       setView(views.includes(v) ? v : 'home');
     };
     window.addEventListener('hashchange', sync);
@@ -73,7 +116,7 @@ export function SkillSetu() {
         if (r.status === 401) return null;
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ?? 'Could not load your demo.');
-        return d as DemoState;
+        return d.session === null ? null : (d as DemoState);
       })
       .then((d) => {
         if (live) {
@@ -94,7 +137,8 @@ export function SkillSetu() {
   }, []);
   function navigate(v: View) {
     setView(v);
-    window.location.hash = v;
+    window.location.hash =
+      v === 'learning' && lessonId ? `${v}/${encodeURIComponent(lessonId)}` : v;
     setMobileMenu(false);
     setError('');
     if (v !== 'learning') setLessonId(null);
@@ -154,6 +198,17 @@ export function SkillSetu() {
     });
   }
   async function openLesson(id: string) {
+    if (state?.role.id === 'python-developer') {
+      const skillId = id.replace(/^lesson-/, '');
+      await action(async () => {
+        await post({ action: 'repair', skillId, mode: 'interactive' });
+        await refresh();
+        setLessonId(skillId);
+        navigate('learning');
+        window.location.hash = `learning/${encodeURIComponent(skillId)}`;
+      });
+      return;
+    }
     await action(async () => {
       await post({
         action: 'lesson',
@@ -206,10 +261,24 @@ export function SkillSetu() {
         </header>
       ) : (
         <>
+          {mobileMenu && (
+            <button
+              className="drawer-backdrop"
+              aria-label="Close navigation overlay"
+              onClick={() => setMobileMenu(false)}
+            />
+          )}
           <aside
             id="product-navigation"
             className={`sidebar no-print ${mobileMenu ? 'sidebar-open' : ''}`}
           >
+            <button
+              className="drawer-close icon-btn"
+              aria-label="Close navigation"
+              onClick={() => setMobileMenu(false)}
+            >
+              <X size={18} />
+            </button>
             <button className="brand" onClick={() => navigate('home')}>
               <Brand />
             </button>
@@ -218,6 +287,7 @@ export function SkillSetu() {
               {nav.map((n) => (
                 <button
                   key={n.id}
+                  aria-current={view === n.id ? 'page' : undefined}
                   className={view === n.id ? 'active' : ''}
                   onClick={() => {
                     if (n.id === 'learning') setLessonId(null);
@@ -258,8 +328,9 @@ export function SkillSetu() {
           <header className="product-topbar no-print">
             <div>
               <button
+                ref={menuTrigger}
                 className="mobile-menu icon-btn"
-                aria-label={mobileMenu ? 'Close navigation' : 'Open navigation'}
+                aria-label="Open navigation"
                 aria-expanded={mobileMenu}
                 aria-controls="product-navigation"
                 onClick={() => setMobileMenu(!mobileMenu)}
@@ -365,12 +436,21 @@ export function SkillSetu() {
                       <span className="eyebrow">YOUR TARGET ROLE</span>
                       <h2>{state.role.name}</h2>
                       <p>
-                        {state.role.description} {state.role.work} Start with three realistic
+                        {state.role.description} {state.role.work} Start with{' '}
+                        {state.role.id === 'python-developer' ? 'four' : 'three'} realistic
                         workplace cases to find which skills need your attention.
                       </p>
                       <div className="tags">
-                        <span className="tag">3 workplace simulations</span>
-                        <span className="tag">24 applied decisions</span>
+                        <span className="tag">
+                          {state.role.id === 'python-developer'
+                            ? '4 varied workplace contexts'
+                            : '3 workplace simulations'}
+                        </span>
+                        <span className="tag">
+                          {state.role.id === 'python-developer'
+                            ? '68 authentic evidence opportunities'
+                            : '24 applied decisions'}
+                        </span>
                         <span className="tag">{state.skills.length} measurable skills</span>
                       </div>
                       <button
@@ -418,7 +498,10 @@ export function SkillSetu() {
                       />
                       <Stat
                         label="Modules mastered"
-                        value={state.progress.filter((p) => p.status === 'mastered').length}
+                        value={
+                          state.progress.filter((p) => p.status === 'mastered').length +
+                          (state.repairProgress?.filter((p) => p.status === 'mastered').length ?? 0)
+                        }
                         detail="From your actual practice answers"
                       />
                       <Stat
@@ -504,31 +587,56 @@ export function SkillSetu() {
             )}
             {view === 'assessment' &&
               (inProgress ? (
-                <SimulationRunner
-                  key={inProgress.id}
-                  state={state}
-                  attempt={inProgress}
-                  busy={busy}
-                  submit={(questionId, selected) =>
-                    action(async () => {
-                      await post({
-                        action: 'answer',
-                        attemptId: inProgress.id,
-                        questionId,
-                        selected,
-                      });
-                      await refresh();
-                    })
-                  }
-                  finish={() =>
-                    action(async () => {
-                      await post({ action: 'complete', attemptId: inProgress.id });
-                      await refresh();
-                      setActiveId(null);
-                      navigate('results');
-                    })
-                  }
-                />
+                inProgress.bank ? (
+                  <AuthenticSimulation
+                    state={state}
+                    attempt={inProgress}
+                    busy={busy}
+                    submit={(taskId, payload) =>
+                      action(async () => {
+                        await post({ action: 'task', attemptId: inProgress.id, taskId, payload });
+                        await refresh();
+                      })
+                    }
+                    evaluate={(taskId, payload) =>
+                      post({ action: 'evaluate', attemptId: inProgress.id, taskId, payload })
+                    }
+                    finish={() =>
+                      action(async () => {
+                        await post({ action: 'complete', attemptId: inProgress.id });
+                        await refresh();
+                        setActiveId(null);
+                        navigate('results');
+                      })
+                    }
+                  />
+                ) : (
+                  <SimulationRunner
+                    key={inProgress.id}
+                    state={state}
+                    attempt={inProgress}
+                    busy={busy}
+                    submit={(questionId, selected) =>
+                      action(async () => {
+                        await post({
+                          action: 'answer',
+                          attemptId: inProgress.id,
+                          questionId,
+                          selected,
+                        });
+                        await refresh();
+                      })
+                    }
+                    finish={() =>
+                      action(async () => {
+                        await post({ action: 'complete', attemptId: inProgress.id });
+                        await refresh();
+                        setActiveId(null);
+                        navigate('results');
+                      })
+                    }
+                  />
+                )
               ) : (
                 <Empty
                   title={
@@ -553,7 +661,7 @@ export function SkillSetu() {
               ))}
             {(view === 'results' || view === 'report') && (
               <Results
-                key={latest?.id + view}
+                key={state.role.id + latest?.id + view}
                 state={state}
                 report={view === 'report'}
                 busy={busy}
@@ -568,41 +676,74 @@ export function SkillSetu() {
                     ← Back to learning plan
                   </button>
                 )}
-                <Learning
-                  state={state}
-                  lessonId={lessonId}
-                  busy={busy}
-                  open={openLesson}
-                  changeMode={(id, mode) =>
-                    action(async () => {
-                      await post({ action: 'lesson', lessonId: id, mode });
-                      await refresh();
-                    })
-                  }
-                  practice={(id, itemId, selected) =>
-                    action(async () => {
-                      const d = await post<{
-                        correct?: boolean;
-                        explanation?: string;
-                        hint?: string;
-                      }>({ action: 'practice', lessonId: id, itemId, selected });
-                      if (selected !== undefined) await refresh();
-                      return d;
-                    })
-                  }
-                  restart={(id) =>
-                    action(async () => {
-                      await post({
-                        action: 'lesson',
-                        lessonId: id,
-                        mode: state.progress.find((p) => p.lessonId === id)?.mode ?? 'interactive',
-                        restart: true,
-                      });
-                      await refresh();
-                    })
-                  }
-                  reassess={() => start('reassessment')}
-                />
+                {state.role.id === 'python-developer' ? (
+                  <RepairLearning
+                    key={state.role.id}
+                    state={state}
+                    selected={lessonId}
+                    busy={busy}
+                    open={(skillId, mode, restart) =>
+                      action(async () => {
+                        await post({ action: 'repair', skillId, mode, restart });
+                        await refresh();
+                        setLessonId(skillId);
+                        window.location.hash = `learning/${encodeURIComponent(skillId)}`;
+                      })
+                    }
+                    send={(skillId, taskId, payload, evaluate) =>
+                      action(async () => {
+                        const result = await post<{
+                          score?: number;
+                          passed?: number;
+                          total?: number;
+                          response?: string;
+                          hint?: string;
+                          explanation?: string;
+                        }>({ action: 'repair-task', skillId, taskId, payload, evaluate });
+                        if (payload && !evaluate) await refresh();
+                        return result;
+                      })
+                    }
+                    reassess={() => start('reassessment')}
+                  />
+                ) : (
+                  <Learning
+                    state={state}
+                    lessonId={lessonId}
+                    busy={busy}
+                    open={openLesson}
+                    changeMode={(id, mode) =>
+                      action(async () => {
+                        await post({ action: 'lesson', lessonId: id, mode });
+                        await refresh();
+                      })
+                    }
+                    practice={(id, itemId, selected) =>
+                      action(async () => {
+                        const d = await post<{
+                          correct?: boolean;
+                          explanation?: string;
+                          hint?: string;
+                        }>({ action: 'practice', lessonId: id, itemId, selected });
+                        if (selected !== undefined) await refresh();
+                        return d;
+                      })
+                    }
+                    restart={(id) =>
+                      action(async () => {
+                        await post({
+                          action: 'lesson',
+                          lessonId: id,
+                          mode:
+                            state.progress.find((p) => p.lessonId === id)?.mode ?? 'interactive',
+                          restart: true,
+                        });
+                        await refresh();
+                      })
+                    }
+                    reassess={() => start('reassessment')}
+                  />
+                )}
               </>
             )}
           </>
@@ -680,7 +821,12 @@ function Onboarding({
             <span>{role.description}</span>
             <span className="small">{role.work}</span>
             <span className="small muted">{role.categories.join(' · ')}</span>
-            <span className="small">3 cases · 24 actions · {role.duration}</span>
+            <span className="small">
+              {role.id === 'python-developer'
+                ? '4 contexts · 68 authentic tasks'
+                : '3 cases · 24 actions'}{' '}
+              · {role.duration}
+            </span>
           </button>
         ))}
       </div>

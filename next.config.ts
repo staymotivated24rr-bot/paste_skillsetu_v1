@@ -11,7 +11,16 @@ const config: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ['@prisma/client'],
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      { source: '/(.*)', headers: securityHeaders },
+      {
+        source: '/python/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cache-Control', value: 'public, max-age=86400' },
+        ],
+      },
+    ];
   },
 };
 

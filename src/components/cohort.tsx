@@ -58,6 +58,34 @@ export function Cohort() {
       data.skills.map((s) => ({ skillId: s.id, target: s.target })),
     ),
   ).length;
+  const distribution = [
+    {
+      label: 'Needs development (<45)',
+      count: diagnosed.filter((m) => readiness(m.currentScores, data.skills) < 45).length,
+    },
+    {
+      label: 'Developing (45–74)',
+      count: diagnosed.filter((m) => {
+        const n = readiness(m.currentScores, data.skills);
+        return n >= 45 && n < 75;
+      }).length,
+    },
+    {
+      label: 'Higher indicator (75+)',
+      count: diagnosed.filter((m) => readiness(m.currentScores, data.skills) >= 75).length,
+    },
+  ];
+  const improvement = {
+    improved: diagnosed.filter(
+      (m) => readiness(m.currentScores, data.skills) > readiness(m.initialScores, data.skills),
+    ).length,
+    declined: diagnosed.filter(
+      (m) => readiness(m.currentScores, data.skills) < readiness(m.initialScores, data.skills),
+    ).length,
+    flat: diagnosed.filter(
+      (m) => readiness(m.currentScores, data.skills) === readiness(m.initialScores, data.skills),
+    ).length,
+  };
   const gaps = data.skills
     .map((s) => ({
       ...s,
@@ -137,6 +165,45 @@ export function Cohort() {
           detail="Prototype threshold, not employability"
         />
       </div>
+      <section className="card">
+        <div className="section-title">
+          <h2>Cohort evidence and next actions</h2>
+          <span className="badge badge-warm">Fictional fixtures only</span>
+        </div>
+        <div className="stats-grid">
+          <Stat
+            label="Incomplete diagnostics"
+            value={data.members.length - diagnosed.length}
+            detail="Invite these learners to establish a baseline"
+          />
+          <Stat
+            label="Repair activity complete"
+            value={
+              diagnosed.filter(
+                (m) => m.modulesAssigned > 0 && m.modulesCompleted >= m.modulesAssigned,
+              ).length
+            }
+            detail="Candidate group for fresh reassessment"
+          />
+          <Stat
+            label="Improvement distribution"
+            value={`${improvement.improved} ↑ / ${improvement.declined} ↓`}
+            detail={`${improvement.flat} unchanged; fictional sample scores`}
+          />
+          <Stat
+            label="Evidence strength"
+            value="Limited"
+            detail="Fixture summaries lack task-type and scenario diversity; confidence is not inferred"
+          />
+        </div>
+        <div className="tags">
+          {distribution.map((d) => (
+            <span className="tag" key={d.label}>
+              {d.label}: {d.count}
+            </span>
+          ))}
+        </div>
+      </section>
       <div className="results-columns">
         <section className="card">
           <div className="section-title">

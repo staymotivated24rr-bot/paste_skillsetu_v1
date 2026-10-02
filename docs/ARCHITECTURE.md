@@ -1,5 +1,7 @@
 # Architecture and measured evidence
 
+The current authentic v2 implementation is documented in the final section below. Earlier sections describe preserved legacy-v1 behavior; they remain for interpreting historical Data Analyst, Python and Java attempts.
+
 ## Runtime
 
 Next.js App Router monolith: one responsive client workspace, a small Node API, pure scoring functions, and Prisma backed by PostgreSQL. Neon is the hosted database target for Vercel. The client never receives assessment keys or future stakeholder replies. Server route validation uses Zod and enforces session ownership, action ordering, valid choices, and same-host browser submissions.
@@ -71,3 +73,33 @@ User.selectedRoleId stores the chosen catalog role; cohort.roleId records fixtur
 The public college selector changes its cohort independently of student selection. Each cohort has 30 fictional aliases; role skill IDs prevent cross-track comparisons. Fixture changes are never described as actual student improvement.
 
 PostgreSQL migrations are managed by Prisma migration history. CI runs PostgreSQL 16, applies migrations, seeds all tracks, and reruns integration tests against the relational model. Real Neon credentials and the production Vercel cutover are verified separately before merge.
+
+## Authentic assessment v2 (shared architecture, Python content)
+
+The legacy sections above describe `legacy-v1` attempts. The additive v2 implementation is in `src/lib/authentic/`: `types.ts` defines discriminated task conventions, `python-banks.ts` privately authors five Python banks and 17 deeper repair modules, `grading.ts` provides pure output/rubric/order grading and evidence strength, `planning.ts` computes actual change explanations and seven-day pacing, and `service.ts` applies ownership/order/version rules to task and repair operations. Private bank content is imported only by seed/service/tests; client projections remove correct indices, expected outputs, rubric concepts, solution code and unrevealed branches.
+
+`AssessmentBank` holds immutable serialized content and a SHA-256 digest. `AssessmentAttempt` adds nullable bank relation, role snapshot, skill snapshot, assessment version and content version. Null bank relations retain the original legacy path. `TaskEvidence` stores task type, scenario, transfer, mappings/weights, bank/version, bounded learner payload, submitted credit and stakeholder response. `SkillScore.quality` stores descriptive evidence metadata. `RepairRun` snapshots module content/version and mode/run/status; `RepairAnswer` stores each first response and retry separately. Original lesson/progress tables stay intact. Migration `202610020003_authentic_evidence` only adds fields/tables/relations; the first two migrations are unchanged.
+
+Completion is serialized by an attempt row lock and writes evidence scores/path/report atomically. Concurrent starts lock the learner row to avoid duplicate active attempts. Starting another role never borrows its baseline or proficiency. Latest proficiency uses only the completed bank's weighted task credit. Cumulative confidence deduplicates task IDs across completed banks; it does not average away a recent decline. Historical reports use stored proficiency, bank/version and skill/target snapshots. Legacy employer profiles remain explicitly fictional, current reference targets rather than promised hiring criteria.
+
+### Browser Python boundary
+
+`python:prepare` copies pinned runtime assets from the npm package into ignored `public/python/` during setup/build. The runtime is fetched only when Run Python is requested. `GET /api/python-sandbox` returns a fixed document as text; the client mounts it using `iframe.srcdoc` and `sandbox="allow-scripts"` without `allow-same-origin`. The document CSP allows scripts/connect only to that deployment's `/python/` path; other network destinations and application API paths are excluded. The worker loads Pyodide, disables network/importScripts/nested-worker globals, and evaluates only in its own WebAssembly/Python namespace. It returns JSON-safe outputs, enforcing bounded output and input preservation. The API compares outputs to private authored cases; the API never executes learner code. The frame and worker are discarded after each run/timeout. Python's virtual files are not server files; imports/open/network are restricted additionally.
+
+A browser execution transcript is supplied by the learner's browser and can be forged. Static CSP/opaque origin protects application credentials and APIs; import allowlists alone are not a certified Python sandbox. Tests and evaluation inputs are inspectable; retries can reveal pass counts. This is suitable for prototype preparation, not trusted anti-cheating certification. A future high-stakes mode requires an independently isolated remote runner and stronger identity/assessment integrity. Browser memory is bounded by the browser process, not a guaranteed per-task quota.
+
+### Evidence and scoring
+
+Decision credit is 0/1. Code credit is the fraction of expected-output cases matched, after mutation/error checks. Ordered steps receive the fraction of correct precedence pairs. Explanations receive weighted credit for three normalized concept dimensions, with a 30-character minimum and 4,000-character maximum. No explanation or lesson completion automatically raises readiness.
+
+Skill evidence score = `round(100 × sum(task credit × skill mapping weight) / sum(skill mapping weight))`. Readiness = role-importance-weighted average of those skill scores, not raw task accuracy. Each important Python skill has at least four primary independent opportunities; critical skills have six or more mapped opportunities. Evidence strength is Limited by default; Moderate needs at least three opportunities, two types and two scenarios; Stronger needs at least five unique opportunities, three types/scenarios, three independent opportunities and transfer. These are authored descriptive rules, not statistical confidence intervals. UI shows latest-bank opportunities, cumulative unique opportunities, types, transfer and label reasoning.
+
+The stakeholder response selects strong/developing/risk branches from submitted credit; the following task reveals the corresponding fixed authored constraint. Task contracts, skill weights and denominators do not change by branch. Two baseline and three reassessment banks vary work contexts, inputs, boundaries and recognition questions while retaining the skill/weight blueprint. They are not psychometrically equated; further pilot validation is required.
+
+### Repair and presentation
+
+Python's new six-task repair sequence adds actual code/short-answer/order work, first-response mastery, hints, retries, independent and transfer applications. Legacy four-item modules remain available in storage/API for history compatibility. Prerequisite-first gaps feed a seven-day effort plan; mastered repair modules move to fresh verification without changing assessed proficiency. Failed evidence is named in priority cards. Reports provide before/after, improved/declining/unchanged skills, new gaps, additional weak evidence, limitations, concrete next actions and historical report selection.
+
+The shared CSS uses semantic dark tokens for surfaces, text, borders, accent/status/focus and spacing, with a separate light print token set. Student navigation includes keyboard focus trapping and Escape/restore for mobile. Cohort analytics exclusively use the 90 fictional seeded members; task diversity is not invented for fixture summaries, so their confidence is explicitly limited. No live anonymous users are mixed into cohort analytics.
+
+Deployment remains Node/Next.js on Vercel with Neon/PostgreSQL. Run additive migrations/seed from a trusted environment before the new build serves these tables. This branch is verified locally against production-equivalent builds; live Neon credentials and remote deployment verification must be reported separately.

@@ -4,18 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
-    "build": "npm run db:generate && node --import tsx prisma/build-setup.ts && next build",
+    "build": "npm run python:prepare && npm run db:generate && node --import tsx prisma/build-setup.ts && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "node --env-file-if-exists=.env.test node_modules/vitest/vitest.mjs run",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
-    "setup": "npm run db:generate && npm run db:migrate && npm run db:seed",
+    "setup": "npm run python:prepare && npm run db:generate && npm run db:migrate && npm run db:seed",
     "db:migrate:hosted": "npm run db:migrate",
-    "setup:hosted": "npm run setup"
+    "setup:hosted": "npm run setup",
+    "python:prepare": "node scripts/prepare-python.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
@@ -23,6 +24,7 @@
     "@prisma/client": "6.19.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
+    "pyodide": "0.29.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.0.0"
