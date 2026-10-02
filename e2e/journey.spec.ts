@@ -108,6 +108,12 @@ test('complete student journey: simulations → honest gaps → both learning mo
   await page.screenshot({ path: 'test-results/readiness-report.png', fullPage: true });
   // Bad answers on another reassessment must produce a real decline.
   await page.getByRole('button', { name: 'Start reassessment', exact: true }).click();
+  await expect
+    .poll(async () => {
+      const current = await (await page.request.get('/api/demo')).json();
+      return current.attempts.some((a: { status: string }) => a.status === 'in_progress');
+    })
+    .toBe(true);
   const live = await (await page.request.get('/api/demo')).json();
   const attempt = live.attempts.find((a: { status: string }) => a.status === 'in_progress');
   for (const q of reassessment.flatMap((s) => s.items)) {
