@@ -13,3 +13,7 @@ No founder decision blocks implementation. Safe defaults and limitations are rec
 Non-blocking validation: pilot the longer authentic banks with students and assess pacing, concept-rubric false negatives, and cross-bank difficulty. Banks are not psychometrically equated. Before high-stakes use, decide verified identity, proctoring/privacy, remote sandbox and independent assessment validation. These are outside this prototype milestone.
 
 Production promotion is separate from PR completion: apply the additive migration/seed in the intended Neon environment and review its Vercel preview before merging. No live production database changes are made from this workspace.
+
+## Adaptive diagnostic pilot — 27 October 2026
+
+Non-blocking for the isolated local slice: choose practitioner reviewers and a learner pilot cohort; review acceptable code-fragment alternatives and the cost of false negatives; select production identity/account recovery and retention policies before public enablement; select a hosting plan/budget before capacity testing. Data Analyst and AI Engineer content/rubric sign-off remain future milestones. No answer is needed to review the implemented Python pilot.

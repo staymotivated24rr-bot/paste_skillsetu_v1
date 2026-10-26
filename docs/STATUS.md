@@ -1,3 +1,7 @@
+# Latest work — 27 October 2026
+
+Adaptive Python diagnostic pilot is implemented on `feat/interactive-diagnostic-v2`, isolated behind `DIAGNOSTIC_V2_ENABLED=true`. Existing role journeys/history remain preserved. Typecheck, lint, 90 unit/integration tests and production build pass; all 10 legacy browser regressions and the final five new diagnostic journeys pass (see the documented test-only restart synchronization repair). See `diagnostic-v2/PRODUCT_REQUIREMENTS.md` for actual scope and `diagnostic-v2/TEST_RESULTS.md` for current verification; older status entries below remain historical. Public authentication, independent content validation and measured scale are still release gates. No production deployment or automatic merge.
+
 # Status — 2026-10-02
 
 ## Current: authentic Python readiness upgrade

@@ -47,3 +47,11 @@
 - Day seven budgets 120 minutes for the fresh authentic bank rather than a short review estimate. A real favicon is served to keep ordinary Chromium journeys free from missing-resource errors.
 
 - Print status badges use a light active surface; the browser checks actual computed foreground/background contrast at 4.5:1 or higher before creating the PDF.
+
+## 27 October 2026 — isolated adaptive Python pilot
+
+- Default-off runtime `DIAGNOSTIC_V2_ENABLED` gates `/diagnostic-v2`, its API and learning introductions. Preserve all three existing role journeys and immutable history. AI Engineer remains a future additional track.
+- Six mandatory Python competency groups, 36 original versioned items, 18/24/30 bounds, deterministic evidence-aware next selection, server-owned fragment/value/order grading. No untrusted code execution or forged browser output credit in the pilot.
+- Opaque hashed pilot sessions are separate from UUID legacy demo sessions. These remain browser pilot sessions, not production accounts. Three new additive tables and a separate owner-FK migration; no reset or applied migration rewrite.
+- Defer worked explanations to completion, label process hints, keep inconsistent/assisted evidence uncertain and practice separate from proficiency. Reuse existing module introductions without marking legacy baselines complete.
+- REA installation is unnecessary for source/PDF work; document official evidence and a non-applied configuration preview. No global config/provider installation or production deployment.

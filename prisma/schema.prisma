@@ -15,6 +15,7 @@ model User {
   progress  LessonProgress[]
   paths     LearningPath[]
   repairs   RepairRun[]
+  diagnosticSessions DiagnosticSession[]
 }
 model Role {
   id           String @id
@@ -279,4 +280,50 @@ model RepairAnswer {
   response String
   answeredAt DateTime @default(now())
   repair RepairRun @relation(fields: [repairId], references: [id], onDelete: Cascade)
+}
+
+// Isolated diagnostic pilot: opaque session tokens, immutable bank/report snapshots.
+model DiagnosticSession {
+  id        String @id @default(uuid())
+  tokenHash String @unique
+  userId    String
+  user      User @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  runs      DiagnosticRun[]
+}
+model DiagnosticRun {
+  id String @id @default(uuid())
+  sessionId String
+  session DiagnosticSession @relation(fields: [sessionId], references: [id])
+  roleId String
+  bankId String
+  engineVersion String
+  bankSnapshot String
+  bankDigest String
+  status String @default("in_progress")
+  currentQuestionId String?
+  currentRationale String
+  hintUsed Boolean @default(false)
+  draft String @default("{}")
+  report String?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  responses DiagnosticResponse[]
+  @@index([sessionId, startedAt])
+}
+model DiagnosticResponse {
+  id String @id @default(uuid())
+  runId String
+  run DiagnosticRun @relation(fields: [runId], references: [id])
+  questionId String
+  position Int
+  payload String
+  correct Boolean
+  assisted Boolean
+  misconception String?
+  rationale String
+  answeredAt DateTime @default(now())
+  @@unique([runId, questionId])
+  @@unique([runId, position])
 }
