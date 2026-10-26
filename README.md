@@ -174,3 +174,9 @@ E2E_BASE_URL=http://127.0.0.1:3004 E2E_SERVER_COMMAND='npm run start -- --port 3
 For cloud development, source `/workspace/skillsetu-runtime/env.sh` and restore PostgreSQL with `/workspace/skillsetu-runtime/start-postgres.sh`. Socket/network commands need executor network access enabled. Use `localhost` for development browser checks and a fresh port for production tests.
 
 See `docs/AUTHENTIC_READINESS_SPEC.md`, `docs/DECISIONS.md` and `docs/ARCHITECTURE.md` for versioning, migration safety, rubric/security limitations and shared versus Python-only content. The first two production migrations and all legacy banks remain unchanged. New banks are immutable: changing content requires a new bank ID/content version. No database reset or automatic merge is needed.
+
+## Adaptive Python diagnostic pilot
+
+A separate, default-off pilot is available at `/diagnostic-v2` when the server runs with `DIAGNOSTIC_V2_ENABLED=true`. It selects questions adaptively across six Python competencies, persists answers/drafts and hint use, and creates an evidence-based report with existing learning-module introductions. It uses its own browser session and does not replace the current three-role journey or its historical records. The 18–30 responses are product defaults, not validated proficiency thresholds; code completion checks bounded fragments rather than executing learner code.
+
+Run the normal local setup first and use a separate PostgreSQL test database. Keep the flag off on public deployments until account authentication, distributed abuse controls and content-validation gates are complete. Design, limitations, REA investigation and executed verification results are under [docs/diagnostic-v2](docs/diagnostic-v2/PRODUCT_REQUIREMENTS.md).
