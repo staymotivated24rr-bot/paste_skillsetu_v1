@@ -1,0 +1,13 @@
+# Adaptive engine design
+
+Pure policy `rule-policy-1` consumes a role bank and immutable ordered first responses. Bank `python-adaptive-2` version 1.1.0 is snapshotted per attempt. Changes require new published versions; never edit historical snapshots.
+
+Selection: exclude seen IDs; inspect last outcome; after a miss probe an uncovered prerequisite where available. Otherwise continue the competency until three observations, aiming one difficulty level higher after success or lower after failure (bounded 1–3). Mandatory coverage debt overrides optional depth. Balance remaining observations by count and stable authored order; break item ties by stable ID. Store the rationale, desired difficulty, prior count and policy version with every selected/answered item. No randomness, LLM or latent ability model.
+
+Stopping: never before 18; require three observations and two formats in all six competencies. Stop early if every competency has entirely consistent successes or misses. At or after target 24, allow completion with at least four observations per competency, retaining inconsistency in the report. Hard maximum 30 ends testing and preserves uncertainty. Bank exhaustion before valid completion is an authoring error, not a fabricated result. Content must supply enough items to meet the coverage budget; future role banks need automated budget validation.
+
+Evidence labels are descriptive product rules, not psychometric confidence: fewer than three observations or two formats → Insufficient evidence; all observed successes → Demonstrated in these tasks; at most one observed success → Likely gap; remaining combinations → Inconsistent evidence. A gap is not proof of inability. All misses and mixed outcomes remain visible. Learning order traverses prerequisites before gaps.
+
+Grading: indexed options, exact authored ordering, normalized constrained code-fragment allowlist, and whole-term short-answer concept groups. No arbitrary code runs, and the schema does not accept scores or client outputs. Exact completion checking can reject equivalent syntax; concept matching can accept superficial language. The UI discloses constrained syntax and the report uses task-level language. These limitations require expert content review and later isolated evaluator work.
+
+Rationale and first responses persist as JSONB with optimistic revision control. Duplicate identical submission returns saved state; changed answers or stale revisions conflict. A conditional update inside a transaction prevents concurrent response loss. The entire report derives from the immutable attempt snapshot and submitted evidence.

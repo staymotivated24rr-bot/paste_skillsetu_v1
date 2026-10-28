@@ -280,3 +280,27 @@ model RepairAnswer {
   answeredAt DateTime @default(now())
   repair RepairRun @relation(fields: [repairId], references: [id], onDelete: Cascade)
 }
+
+model AdaptiveSession {
+  id String @id @default(uuid())
+  tokenHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  attempt AdaptiveAttempt?
+}
+model AdaptiveAttempt {
+  id String @id @default(uuid())
+  sessionId String @unique
+  session AdaptiveSession @relation(fields:[sessionId],references:[id])
+  roleId String
+  bankVersion String
+  policyVersion String
+  snapshot Json
+  evidence Json
+  selection Json
+  revision Int @default(0)
+  status String @default("in_progress")
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  @@index([roleId, status, createdAt])
+}

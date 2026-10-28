@@ -18,7 +18,12 @@ if (!/^postgres(?:ql)?:\/\//.test(url)) {
   throw new Error('DATABASE_URL must be a PostgreSQL connection string.');
 }
 
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-execFileSync(npm, ['run', 'db:migrate'], { stdio: 'inherit', env: process.env });
-execFileSync(npm, ['run', 'db:seed'], { stdio: 'inherit', env: process.env });
+execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+execFileSync(process.execPath, ['--import', 'tsx', 'prisma/seed.ts'], {
+  stdio: 'inherit',
+  env: process.env,
+});
 console.log('PostgreSQL database migrated and seeded for this build.');

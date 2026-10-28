@@ -6,6 +6,7 @@ export default defineConfig([
   ...nextTs,
   globalIgnores([
     '.next/**',
+    '.env.*/**',
     'public/python/**',
     'playwright-report/**',
     'test-results/**',

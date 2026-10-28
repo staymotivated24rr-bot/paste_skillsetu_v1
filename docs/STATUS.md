@@ -63,3 +63,11 @@ The Vercel inspect command could not retrieve the failed deployment logs because
 Structured recognition, fixed banks, short lessons, limited evidence, binary prototype rubrics, cookie demo access and fictional cohorts/employers. No free-form execution, scientific readiness validation, voice/3D or active AI. Cloud Linux verification is complete; Windows launch scripts are included but were not executed on a Windows machine here. Hosted storage support is retained and migration behavior checked locally, but no real hosted credentials/deployment were available for live verification.
 
 No unblocked implementation tasks or unresolved founder questions remain. Next work is a real learner/practitioner validation pilot using fresh independently scored tasks; see FINAL_REPORT.md.
+
+## Adaptive diagnostic v2 — 2026-10-29
+
+Implemented isolated `/diagnostic-v2`: six Python core competencies, 30 versioned items, adaptive 18/24/30 policy, hashed anonymous sessions, saved progress, reports and focused study pages. Original tracks/banks/history are preserved. Eleven Python skills remain unmeasured; public identity, practitioner validation, fresh reassessment and scale benchmarks remain future work.
+
+Verified locally on Windows: 85 unit/integration tests; typecheck/lint/production build; full 14-test production browser suite, followed by four affected adaptive checks after bank 1.1.0 metadata revision. Production-only dependency audit reports zero vulnerabilities after compatible Next/Zod updates; development/transitive advisories remain. See [diagnostic-v2/TEST_RESULTS.md](diagnostic-v2/TEST_RESULTS.md) for exact scope and limits.
+
+The pre-existing remote `feat/interactive-diagnostic-v2` at `232d687` is preserved. This independent main-based implementation is published for comparison on `feat/interactive-diagnostic-v2-20261029`; do not merge both adaptive schema designs without review. No production deployment, production migration or main merge was performed.

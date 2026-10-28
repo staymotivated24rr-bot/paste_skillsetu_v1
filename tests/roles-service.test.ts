@@ -39,7 +39,7 @@ async function startAssessment(
 }
 let uid = '';
 beforeAll(async () => {
-  execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {
+  execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], {
     env: process.env,
     stdio: 'pipe',
   });

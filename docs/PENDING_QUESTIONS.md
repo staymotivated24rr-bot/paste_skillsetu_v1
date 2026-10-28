@@ -13,3 +13,6 @@ No founder decision blocks implementation. Safe defaults and limitations are rec
 Non-blocking validation: pilot the longer authentic banks with students and assess pacing, concept-rubric false negatives, and cross-bank difficulty. Banks are not psychometrically equated. Before high-stakes use, decide verified identity, proctoring/privacy, remote sandbox and independent assessment validation. These are outside this prototype milestone.
 
 Production promotion is separate from PR completion: apply the additive migration/seed in the intended Neon environment and review its Vercel preview before merging. No live production database changes are made from this workspace.
+
+## Adaptive v2 non-blockers — 2026-10-29
+Practitioner review of six-competency scope, acceptable completion syntax and short-answer rubrics remains outstanding. Reassessment with fresh forms, account authentication, rate limits and public release are later milestones. These do not block an isolated local preview; they block production rollout.

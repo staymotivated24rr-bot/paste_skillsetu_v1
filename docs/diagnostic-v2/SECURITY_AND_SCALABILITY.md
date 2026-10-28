@@ -1,0 +1,25 @@
+# Security, production evaluation and scalability
+
+## Identity and integrity
+Existing demo UUID cookies are not public-account authentication. New preview uses random hashed bearer sessions, expiry, same-origin checks, no-store responses, bounded strict schemas, session-scoped queries and transactional revision checks. This reduces UUID guessing and cross-session access; it does not provide identity verification, revocation UI, account recovery, stolen-cookie protection or distributed abuse prevention. Start can create anonymous sessions; public enablement requires rate limits and retention controls. Local draft storage is browser-readable and must not contain secrets. Shared-device learners need a future explicit sign-out/clear-drafts flow.
+
+Old browser Pyodide outputs are forgeable: a caller can fabricate outputs expected by the server without executing submitted code. Preserve sandbox restrictions but never treat those transcripts as trusted execution evidence. New adaptive fragment checks do not accept outputs and never execute learner code, but constrained allowlists and concept keywords have false-negative and false-positive limits. No high-stakes certification claims.
+
+Production execution strategy (designed only): queue code to a dedicated disposable sandbox/microVM service, never the web process; no credentials/network, read-only base, ephemeral filesystem, CPU/memory/time/process limits, pinned runtime, server-owned hidden cases, signed job identity and authenticated results, per-user quotas and audit logs. Independent security review and adversarial escape testing precede launch. Browser execution may remain a low-risk practice aid, explicitly separate from assessed evidence.
+
+## Capacity assumptions and measurable targets
+10,000 registered users is a population goal. Planning hypothesis: 1,000 daily actives, 200 daily diagnostics, 24 submissions each (~4,800 writes/day), 50 simultaneous assessments at peak, 10 submissions/second burst. Validate these assumptions in pilot analytics. No 10,000-concurrent claim and no executed capacity benchmark in this milestone.
+
+Keep stateless Next servers and managed pooled PostgreSQL. Per-request lookup uses unique tokenHash/sessionId/id indexes; administrative role/status/time queries use the added composite index. Snapshot and evidence stay private. At 30 small items, selection is bounded linear scans with a small constant; avoid caching personalized responses. Cache immutable public bank metadata only, keyed by version. JSONB snapshots increase row size; benchmark growth/vacuum and consider shared immutable banks plus append-only response rows before sustained high traffic. Avoid rebuilding all legacy student state per adaptive answer.
+
+Autosave drafts locally, persist only explicit responses; no per-keystroke network writes. Revision conflicts recover via reload. Put distributed per-session and per-IP limits at the edge or managed store; in-process maps are insufficient with multiple instances. Alert on 5xx rate, submission latency, conflicts, pool wait, database connections and sandbox timeouts. Use request IDs and structured metadata, never tokens, connection strings or answer content in logs. Add Sentry/OpenTelemetry only after reviewing privacy/configuration.
+
+Targets to verify, not measured claims: p95 submit <500 ms and p99 <1.5 s at 10 submissions/s; API error rate <1%; zero lost/duplicate evidence under retry and concurrency. Test ramp 1→10 requests/s for 20 minutes with realistic owned sessions, then a short 25 requests/s burst; include refresh/read traffic and completion. Run against disposable staging PostgreSQL, inspect CPU/RAM/pool saturation, compare growth at 10k synthetic users, and retain raw results.
+
+Managed PostgreSQL backups/PITR, restore rehearsal, schema migration lock/timeout review and staged additive rollout precede public release. Hosting cost depends on active compute time, DB storage/pool tier and evaluation jobs; do not quote an unverified vendor price. Obtain current Vercel/Neon quotes against measured traffic. Avoid microservices/Kubernetes except the separately isolated evaluator if introduced.
+
+## Release blockers
+Real identity and revocation, edge rate limits, retention/consent, dependency audit remediation, content review, secure evaluator if unrestricted tasks are added, load test and recovery drill. This isolated local preview is not production-ready for 10,000 registered users.
+
+## Dependency audit follow-up — 2026-10-29
+Initial production-only audit found inherited Next.js and Zod advisories. Compatible lockfile updates installed Next 16.4.3 and Zod 4.6.7; `npm audit --omit=dev --omit=optional --audit-level=high` then reported zero vulnerabilities. The unrestricted audit still reports development/transitive advisories; these were not silently treated as remediated. Review them before using build tools on untrusted projects. Sources: [Next advisory](https://github.com/advisories/GHSA-2464-fhr4-w9xw), [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). No production deployment occurred.
