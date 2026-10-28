@@ -14,7 +14,10 @@ import { correctPayload, wrongPayload } from './authentic-fixtures';
 let uid = '',
   attemptId = '';
 beforeAll(async () => {
-  execFileSync('npm', ['run', 'setup'], { stdio: 'pipe', env: process.env });
+  execFileSync(process.execPath, ['scripts/test-database-setup.mjs'], {
+    stdio: 'pipe',
+    env: process.env,
+  });
   uid = (await createStudent('Authentic integration', 'python-developer')).id;
 });
 afterAll(() => db.$disconnect());
@@ -127,7 +130,10 @@ it('serializes simultaneous starts and preserves sealed evidence through repeate
     include: { answers: { orderBy: { id: 'asc' } } },
     orderBy: { id: 'asc' },
   });
-  execFileSync('npm', ['run', 'setup'], { stdio: 'pipe', env: process.env });
+  execFileSync(process.execPath, ['scripts/test-database-setup.mjs'], {
+    stdio: 'pipe',
+    env: process.env,
+  });
   expect(
     await db.assessmentAttempt.findMany({
       where: { userId: uid },

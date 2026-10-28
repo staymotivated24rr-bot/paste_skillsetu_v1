@@ -174,3 +174,9 @@ E2E_BASE_URL=http://127.0.0.1:3004 E2E_SERVER_COMMAND='npm run start -- --port 3
 For cloud development, source `/workspace/skillsetu-runtime/env.sh` and restore PostgreSQL with `/workspace/skillsetu-runtime/start-postgres.sh`. Socket/network commands need executor network access enabled. Use `localhost` for development browser checks and a fresh port for production tests.
 
 See `docs/AUTHENTIC_READINESS_SPEC.md`, `docs/DECISIONS.md` and `docs/ARCHITECTURE.md` for versioning, migration safety, rubric/security limitations and shared versus Python-only content. The first two production migrations and all legacy banks remain unchanged. New banks are immutable: changing content requires a new bank ID/content version. No database reset or automatic merge is needed.
+
+## Adaptive diagnostic v2 (isolated preview)
+
+After normal database setup, open `/diagnostic-v2`. The Python core assessment uses 30 versioned tasks and an explainable 18–30-response adaptive policy. It supports saved responses, local drafts, a competency report, completed-answer review and focused study pages using existing lesson content. Other Python skills are explicitly unmeasured; Data Analyst and Java journeys remain intact. This preview uses its own anonymous session, not public-account authentication.
+
+Design, security limits, reference analysis and executed checks are in [docs/diagnostic-v2](docs/diagnostic-v2/PRODUCT_REQUIREMENTS.md). Run the new browser tests with `npm run test:e2e -- e2e/adaptive.spec.ts`. Configure a separate PostgreSQL test database in `.env.test` before `npm test`. Do not run integration tests against a production database.

@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { db } from '../src/lib/db';
 
 function migrateAndSeed() {
-  execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {
+  execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], {
     env: process.env,
     stdio: 'pipe',
   });

@@ -1,0 +1,357 @@
+.shell {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 5% 40%, #16352e70, transparent 45%), var(--background);
+  color: var(--text-primary);
+}
+.header {
+  height: 88px;
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.header a,
+.sidebar a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.brand {
+  font-weight: 800;
+  font-size: 23px;
+  letter-spacing: -1px;
+}
+.brand span {
+  color: var(--accent);
+  font-size: 32px;
+  margin-right: 8px;
+}
+.badge,
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+.badge {
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  border-radius: 30px;
+}
+.layout {
+  max-width: 1350px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 8%;
+  padding: 64px 5%;
+}
+.sidebar {
+  padding-top: 38px;
+}
+.sidebar h2 {
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+.sidebar p {
+  color: var(--text-secondary);
+}
+.sidebar ol {
+  padding-left: 20px;
+  line-height: 3;
+}
+.note {
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 32px;
+}
+.workspace {
+  min-width: 0;
+  max-width: 790px;
+  padding: 36px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: #11191de8;
+  box-shadow: 0 20px 100px #0003;
+}
+.workspace h1 {
+  font-size: clamp(30px, 3.4vw, 48px);
+  line-height: 1.16;
+  letter-spacing: -1.7px;
+  font-weight: 650;
+}
+.workspace h2 {
+  font-size: 24px;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+}
+.workspace p {
+  color: var(--text-secondary);
+}
+.intro > p {
+  max-width: 560px;
+}
+.intro h1 {
+  margin: 22px 0;
+}
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 32px 0;
+}
+.cards > div {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.cards b {
+  color: var(--accent);
+}
+.cards h3 {
+  margin: 12px 0 5px;
+}
+.cards p {
+  font-size: 13px;
+  margin: 0;
+}
+.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 750;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px 24px;
+  min-height: 48px;
+}
+.primary:hover {
+  background: var(--accent-hover);
+}
+.primary:disabled {
+  opacity: 0.65;
+}
+.workspace pre {
+  padding: 24px;
+  background: #080f12;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;
+  color: #c8eadf;
+  line-height: 1.8;
+  font-size: 14px;
+}
+.workspace fieldset {
+  padding: 0;
+  border: 0;
+  margin: 24px 0;
+}
+.workspace legend {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.option,
+.selected {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  background: var(--surface);
+}
+.selected {
+  border-color: var(--accent);
+  background: var(--surface-active);
+}
+.workspace input {
+  accent-color: var(--accent);
+  margin-top: 6px;
+}
+.written {
+  display: block;
+  margin: 24px 0;
+}
+.written textarea {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  background: #080f12;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 16px;
+  border-radius: 10px;
+  font-family: monospace;
+  resize: vertical;
+}
+.written small {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.workspace footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 24px;
+}
+.workspace footer span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.workspace details {
+  margin-top: 20px;
+  color: var(--text-secondary);
+}
+.workspace summary {
+  cursor: pointer;
+  min-height: 30px;
+}
+.workspace progress {
+  width: 100%;
+  height: 5px;
+  accent-color: var(--accent);
+  margin: 14px 0 28px;
+}
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+.workspace .questionTitle {
+  font-size: 16px;
+  letter-spacing: 0;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+}
+.questionTitle span {
+  color: var(--accent);
+  font-size: 12px;
+}
+.error {
+  background: #3d2125;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.error button,
+.steps button {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 8px 14px;
+  border-radius: 6px;
+  min-height: 44px;
+}
+.steps {
+  padding-left: 22px;
+}
+.steps li {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 8px;
+}
+.steps li > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 28px 0;
+}
+.results article {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.results h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.results strong {
+  color: var(--accent);
+  font-size: 12px;
+}
+.results p {
+  font-size: 12px;
+}
+.review {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+.workspace a {
+  color: var(--accent);
+}
+@media (max-width: 850px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 28px 4%;
+    gap: 20px;
+  }
+  .sidebar {
+    display: none;
+  }
+  .workspace {
+    max-width: none;
+    padding: 24px;
+  }
+  .header {
+    height: 72px;
+  }
+  .badge {
+    display: none;
+  }
+  .cards,
+  .results {
+    grid-template-columns: 1fr;
+  }
+  .workspace footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .workspace footer .primary {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .workspace {
+    animation: arrive 0.24s ease-out;
+  }
+  .option,
+  .selected,
+  .primary {
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0.5;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

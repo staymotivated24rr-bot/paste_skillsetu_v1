@@ -47,3 +47,8 @@
 - Day seven budgets 120 minutes for the fresh authentic bank rather than a short review estimate. A real favicon is served to keep ordinary Chromium journeys free from missing-resource errors.
 
 - Print status badges use a light active surface; the browser checks actual computed foreground/background contrast at 4.5:1 or higher before creating the PDF.
+
+## Adaptive diagnostic v2 — 2026-10-29
+Isolated `/diagnostic-v2`, six required Python competencies, 30 original items, 18/24/30 rule-based length. Remaining eleven skills explicitly unmeasured. New snapshot-based tables and hashed anonymous sessions preserve legacy journeys; this does not add registered accounts. Correctness feedback deferred until completion. Exact fragment checking replaces trust in browser outputs for the new slice. See docs/diagnostic-v2 for review limits and verification.
+
+Publication default: preserve the existing remote `feat/interactive-diagnostic-v2` at `232d687`; publish this independent main-based implementation on `feat/interactive-diagnostic-v2-20261029`. Local development used the exact requested branch. Do not deploy both competing adaptive migration designs without reconciliation.
